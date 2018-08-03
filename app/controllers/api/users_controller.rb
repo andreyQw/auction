@@ -1,7 +1,7 @@
 class Api::UsersController < ApplicationController
   def index
     # GET | /api/users | api/users#index | api_article_path
-    users = 'users'
+    users = User.all
     render json: {status: 'success', message: 'UsersController::index', data:users}
   end
 
