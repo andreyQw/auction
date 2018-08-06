@@ -10,14 +10,50 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_08_01_120310) do
+ActiveRecord::Schema.define(version: 2018_08_06_095154) do
+
+  create_table "bids", force: :cascade do |t|
+    t.decimal "proposed_price"
+    t.datetime "created_at"
+    t.integer "lot_id"
+    t.integer "user_id"
+    t.index ["lot_id"], name: "index_bids_on_lot_id"
+    t.index ["user_id"], name: "index_bids_on_user_id"
+  end
+
+  create_table "lots", force: :cascade do |t|
+    t.string "title"
+    t.string "image"
+    t.string "description"
+    t.integer "status", default: 0
+    t.decimal "current_price"
+    t.decimal "estimated_price"
+    t.datetime "lot_start_time"
+    t.datetime "lot_end_time"
+    t.integer "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["status"], name: "index_lots_on_status"
+    t.index ["user_id"], name: "index_lots_on_user_id"
+  end
+
+  create_table "orders", force: :cascade do |t|
+    t.integer "status", default: 0
+    t.string "arrival_type"
+    t.text "arrival_location"
+    t.integer "lot_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["lot_id"], name: "index_orders_on_lot_id"
+    t.index ["status"], name: "index_orders_on_status"
+  end
 
   create_table "users", force: :cascade do |t|
     t.string "email"
     t.string "password"
     t.string "phone"
-    t.string "fname"
-    t.string "lname"
+    t.string "first_name"
+    t.string "last_name"
     t.date "birthday"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
