@@ -31,3 +31,5 @@
 .env
 
 /coverage
+
+diff.diff

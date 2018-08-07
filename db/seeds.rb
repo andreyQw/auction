@@ -8,12 +8,12 @@
 
 # https://github.com/stympy/faker
 3.times do
-	User.create({
-		email: Faker::Internet.email,
-		password: '123456',
-		phone: Faker::PhoneNumber.cell_phone,
-		fname: Faker::Name.first_name,
-		lname: Faker::Name.last_name,
-		birthday: Faker::Date.birthday(21, 65)
-	})
+  User.create(
+    email: Faker::Internet.email,
+    password: "123456",
+    phone: Faker::PhoneNumber.cell_phone,
+    fname: Faker::Name.first_name,
+    lname: Faker::Name.last_name,
+    birthday: Faker::Date.birthday(21, 65)
+  )
 end
