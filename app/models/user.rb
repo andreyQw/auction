@@ -47,6 +47,16 @@ class User < ApplicationRecord
 
   validates :email, :phone, :first_name, :last_name, :birthday,  presence: true
 
+  validates :email, uniqueness: true
+
+  validate :age_must_be_more_then_21
+
+  def age_must_be_more_then_21
+    if (DateTime.now - 21.years) < birthday
+      errors.add(:birthday, "Age can't be less then 21 year")
+    end
+  end
+
   has_many :lots
   has_many :bids
 end
