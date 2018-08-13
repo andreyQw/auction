@@ -1,18 +1,17 @@
 # frozen_string_literal: true
-
 # == Schema Information
 #
 # Table name: lots
 #
 #  id              :integer          not null, primary key
-#  current_price   :decimal(, )
+#  current_price   :decimal(, )      not null
 #  description     :string
-#  estimated_price :decimal(, )
+#  estimated_price :decimal(, )      not null
 #  image           :string
-#  lot_end_time    :datetime
-#  lot_start_time  :datetime
+#  lot_end_time    :datetime         not null
+#  lot_start_time  :datetime         not null
 #  status          :integer          default("pending")
-#  title           :string
+#  title           :string           not null
 #  created_at      :datetime         not null
 #  updated_at      :datetime         not null
 #  user_id         :integer
@@ -29,4 +28,14 @@ class Lot < ApplicationRecord
   has_one :order
 
   enum status: [ :pending, :inProcess, :closed ]
+
+  validates :title, :current_price, :estimated_price, :lot_start_time, :lot_end_time,  presence: true
+
+  # validate :lot_start_time_must_be_more_then_now
+  #
+  # def lot_start_time_must_be_more_then_now
+  #   if DateTime.now > lot_start_time
+  #     errors.add(:lot_start_time, "Lot start time can't be less than current time")
+  #   end
+  # end
 end

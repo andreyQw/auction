@@ -22,14 +22,14 @@ ActiveRecord::Schema.define(version: 2018_08_08_093511) do
   end
 
   create_table "lots", force: :cascade do |t|
-    t.string "title"
+    t.string "title", null: false
     t.string "image"
     t.string "description"
     t.integer "status", default: 0
-    t.decimal "current_price"
-    t.decimal "estimated_price"
-    t.datetime "lot_start_time"
-    t.datetime "lot_end_time"
+    t.decimal "current_price", null: false
+    t.decimal "estimated_price", null: false
+    t.datetime "lot_start_time", null: false
+    t.datetime "lot_end_time", null: false
     t.integer "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

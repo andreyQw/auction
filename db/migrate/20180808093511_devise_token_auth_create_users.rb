@@ -52,7 +52,7 @@ class DeviseTokenAuthCreateUsers < ActiveRecord::Migration[5.2]
       # if you change the default values above you'll also have to change them here below:
       User.find_each do |user|
         user.uid = user.email
-        user.provider = 'email'
+        user.provider = "email"
         user.save!
       end
     end
