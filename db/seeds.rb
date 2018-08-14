@@ -9,3 +9,4 @@
 require "factory_bot"
 
 FactoryBot.create_list :user, 3
+FactoryBot.create_list :lot, 2

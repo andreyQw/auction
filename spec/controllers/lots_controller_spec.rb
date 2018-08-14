@@ -19,7 +19,7 @@ RSpec.describe LotsController, type: :controller do
         create_list :lot, 3, user: @user
       end
 
-      it 'gives you a status 200 on signing in ' do
+      it "gives you a status 200 on signing in " do
         get :index
         expect(response.status).to eq(200)
       end
@@ -31,21 +31,66 @@ RSpec.describe LotsController, type: :controller do
     end
   end
 
-  describe "Create lot" do
+  describe "POST /lots" do
     login(:user)
-    # subject { post :create, params: { lot: attributes_for(:lot, title: @lot.title) } }
-    subject { post :create, params: { lot: attributes_for(:lot, @lot) } }
+    subject { post :create, params: {
+        title: @lot.title,
+        current_price: @lot.current_price,
+        estimated_price: @lot.estimated_price,
+        lot_start_time: @lot.lot_start_time,
+        lot_end_time: @lot.lot_end_time,
+      }
+    }
+    context "valid title" do
+      before(:each) do
+        @lot = build(:lot)
+      end
 
-    before(:each) do
-      @lot = build(:lot)
-      @lot.user_id = @user.id
+      it "response for create should be success" do
+        subject
+        expect(response).to be_success
+      end
+
     end
 
-    # subject { post :create }
-
-    it "response for create should be success" do
-      subject
-      expect(response).to be_success
+    context "not valid title" do
+      before(:each) do
+        @lot = build(:lot)
+        @lot.title = nil
+      end
+      it "not valid " do
+        subject
+        # expect(parse_json_string(response.body)[:errors][:title]).to eq(["can't be blank"])
+        expect(JSON.parse(response.body, symbolize_names: true)[:data][:title]).to eq(["can't be blank"])
+      end
     end
   end
+
+  describe "GET /lots/:id" do
+    login(:user)
+    subject { get :show, params: { id: @lot.id }}
+    context "show lot details " do
+      before(:each) do
+        @lot = create(:lot, user: @user, status: :pending)
+      end
+
+      it "response lot" do
+        subject
+        expect(response).to be_success
+      end
+    end
+
+    context "lot not found" do
+      subject { get :show, params: { id: 2 }}
+      before(:each) do
+        @lot = create(:lot, user: @user, status: :pending)
+      end
+      it "lot.id = 2 not found " do
+        subject
+        # expect(parse_json_string(response.body)[:errors][:title]).to eq(["can't be blank"])
+        expect(JSON.parse(response.body, symbolize_names: true)[:data][:title]).to eq(["can't be blank"])
+      end
+    end
+  end
+
 end

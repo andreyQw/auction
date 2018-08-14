@@ -4,25 +4,31 @@ class LotsController < ApplicationController
   before_action :authenticate_user!
 
   def index
-    lots = Lot.select(:id, :title, :current_price).where(status: [:pending, :in_progress]).limit(2)
-    # lots = Lot.where(status: [:pending, :in_progress]).limit(2)
+    # lots = Lot.select(:id, :title, :current_price).where(status: [:pending, :in_progress]).limit(2)
+    lots = Lot.where(status: [:pending, :in_progress]).page(1).per(2)
+    # params[:page => 1 ]
+    # lots = Lot.where(status: [:pending, :in_progress]).page params[:page]
     render json: { status: "success", message: "all available lots", data: lots }
   end
 
   def create
-    lot = Lot.new(lot_params)
+    lot = Lot.new(lot_params.merge(user: current_user))
     if lot.save
-      render json: {status: "success", message: "lot was created", data:lot}
+      render json: {status: "success", message: "lot was created", data: lot}
     else
-      render json: {status: "error", message: "lot was't create", data:lot.errors}
+      render json: {status: "error", message: "lot was't create", data: lot.errors}
     end
   end
-  #
-  # def show
-  #   # GET | /api/users/:id | api/users#show | api_article_path(:id)
-  #   user = User.find(params[:id])
-  #   render json: {status: 'success', message: 'UsersController::show', data:user}
-  # end
+
+  def show
+    # GET | lots/:id | lot#show
+    lot = Lot.find(params[:id])
+    if lot == true
+      render json: {status: "success", message: "show lot details", data: lot}
+    else
+      render json: {status: "error", message: "lot was't create", data: lot.errors}
+    end
+  end
   #
   # def edit
   #   # GET | /api/users/:id/edit | api/users#edit | edit_api_article_path(:id)

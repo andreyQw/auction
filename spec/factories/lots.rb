@@ -1,6 +1,7 @@
 
 FactoryBot.define do
   factory :lot do
+    user_id 1
     title { Faker::Device.model_name }
     image  'img'
     description { Faker::Device.manufacturer }
