@@ -2,7 +2,7 @@
 
 module ResponseHelpers
   # Parse JSON response to ruby hash
-  def json_parse
+  def json_parse_response_body
     JSON.parse(response.body, symbolize_names: true)
   end
 end

@@ -8,26 +8,65 @@ RSpec.describe LotsController, type: :controller do
   #
   describe "GET /lots" do
 
-    it "redirected on auth/sign_in" do
+    it "error - You need to sign_in/sign_up" do
       get :index
-      expect(response.status).to eq(302)
+      expect(response.status).to eq(401)
     end
 
-    context "context: general authentication via API, " do
+    context "context: path with login, " do
       login(:user)
 
       before(:each) do
         create_list :lot, 3, user: @user
       end
 
-      it "gives you a status 200 on signing in " do
+      it "gives you a status 200 after sign_in " do
         get :index
         expect(response.status).to eq(200)
       end
 
-      it "should return paginate with 2 lots" do
-        get :index
-        expect(json_parse[:data][:lots].count).to eq(2)
+      context "should return all lots" do
+        # config.default_per_page = 10
+        before(:each) do
+          create_list :lot, 10, user: @user
+          create_list :lot, 10, user: @user, status: :in_process
+          create_list :lot, 2, user: @user, status: :closed
+
+          @user2 = create :user
+          create :lot, user: @user2
+          create :lot, user: @user2, status: :in_process
+          create :lot, user: @user2, status: :closed
+        end
+
+        it "should return 10 lots without params" do
+          get :index
+          expect(json_parse_response_body[:resources].count).to eq(10)
+        end
+
+        it "should return 1 lots with page 2" do
+          get :index, params: { page: 2 }
+          expect(json_parse_response_body[:resources].count).to eq(1)
+        end
+
+        it "should return 10 lots belongs_to user" do
+          # get :index, params: { page: 2, user_id: @user2.id }
+          get :index, params: { user_id: @user.id }
+          expect(json_parse_response_body[:resources].count).to eq(10)
+        end
+
+        it "should return 3 lots not belongs_to user" do
+          get :index, params: { user_id: @user2.id }
+          expect(json_parse_response_body[:resources].count).to eq(3)
+        end
+
+        it "should use serializer" do
+          get :index,  params: { user_id: @user.id }
+
+          lot = Lot.where(user_id: @user.id).first
+          serialize = LotSerializer.new(lot).as_json
+
+          expect(json_parse_response_body[:resources][0]).to eq(serialize)
+        end
       end
     end
   end
@@ -43,7 +82,7 @@ RSpec.describe LotsController, type: :controller do
         lot_end_time: @lot.lot_end_time,
       }
     }
-    context "valid title" do
+    context "create lot valid" do
       before(:each) do
         @lot = build(:lot)
       end
@@ -54,16 +93,28 @@ RSpec.describe LotsController, type: :controller do
       end
     end
 
-    context "not valid title" do
+    context "create lot should be errors " do
+      time = DateTime.now - 1.hour
       before(:each) do
         @lot = build(:lot)
         @lot.title = nil
+        @lot.lot_start_time = time
+        @lot.lot_end_time = time
       end
 
-      it "not valid " do
+      it "title is not valid" do
         subject
-        # expect(parse_json_string(response.body)[:errors][:title]).to eq(["can't be blank"])
-        expect(json_parse[:data][:title]).to eq(["can't be blank"])
+        expect(json_parse_response_body[:errors][:title]).to eq(["can't be blank"])
+      end
+
+      it "lot_start_time is not valid" do
+        subject
+        expect(json_parse_response_body[:errors][:lot_start_time]).to eq(["Lot START time can't be less than current time"])
+      end
+
+      it "lot_end_time is not valid" do
+        subject
+        expect(json_parse_response_body[:errors][:lot_end_time]).to eq(["Lot END time can't be less than lot START time"])
       end
     end
   end
@@ -95,7 +146,7 @@ RSpec.describe LotsController, type: :controller do
       it "lot.id = 2 not found " do
         subject
         expect(response.status).to eq 404
-        expect(json_parse).to eq(message: "Not found")
+        expect(json_parse_response_body).to eq(message: "Not found")
       end
     end
   end
@@ -109,23 +160,23 @@ RSpec.describe LotsController, type: :controller do
 
     subject { put :update, params: { id: @lot.id, title: "New title" } }
 
-    context "update with valid user and pending status" do
-      it "update with creator user" do
+    context "update with valid user and :pending status" do
+      it "should update" do
         expect { subject } .to change { @lot.reload.title } .to("New title")
       end
     end
 
-    context "update with valid user and not :pending status" do
+    context "update with valid user and not valid status" do
 
       subject { put :update, params: { id: @lot.id, title: "New title" } }
-      context ":inProgress" do
+      context ":in_process" do
         before(:each) do
-          @lot = create :lot, user: @user, status: :inProcess
+          @lot = create :lot, user: @user, status: :in_process
         end
 
-        it "update with creator user and :inProgress status" do
+        it "update with creator user and :in_process status" do
           subject
-          expect(json_parse[:message]).to eq("user or status is not valid")
+          expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
         end
       end
 
@@ -134,9 +185,9 @@ RSpec.describe LotsController, type: :controller do
           @lot = create :lot, user: @user, status: :closed
         end
 
-        it "update with creator user" do
+        it "update with creator user and :closed status" do
           subject
-          expect(json_parse[:message]).to eq("user or status is not valid")
+          expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
         end
       end
     end
@@ -147,9 +198,9 @@ RSpec.describe LotsController, type: :controller do
         login_by_user @user2
       end
 
-      it "update with not creator user reject" do
+      it "update with not creator - error" do
         subject
-        expect(json_parse[:message]).to eq("user or status is not valid")
+        expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
       end
     end
   end
@@ -165,7 +216,7 @@ RSpec.describe LotsController, type: :controller do
     subject { delete :destroy, params: { id: @lot.id } }
 
     context "delete with valid user and pending status" do
-      it "delete with creator user" do
+      it "should delete" do
         subject
         expect(response.status).to eq 200
       end
@@ -173,12 +224,12 @@ RSpec.describe LotsController, type: :controller do
 
     context "delete with valid user and not :pending status" do
 
-      context ":in_progress" do
+      context ":in_process" do
         before(:each) do
-          @lot = create :lot, user: @user, status: :inProcess
+          @lot = create :lot, user: @user, status: :in_process
         end
 
-        it "delete with creator user and :in_progress status" do
+        it "should not delete (status: :in_process)" do
           subject
           expect(Lot.where(id: @lot.id).present?).to be
         end
@@ -188,7 +239,7 @@ RSpec.describe LotsController, type: :controller do
         before(:each) do
           @lot = create :lot, user: @user, status: :closed
         end
-        it "delete with creator user" do
+        it "should not delete (status: :closed)" do
           subject
           expect(Lot.where(id: @lot.id).present?).to be
         end
@@ -201,10 +252,10 @@ RSpec.describe LotsController, type: :controller do
         login_by_user @user2
       end
 
-      it "delete with not creator user reject" do
+      it "should not delete (user no owner)" do
         subject
         expect(Lot.where(id: @lot.id).present?).to be
-        expect(json_parse[:message]).to eq("user or status is not valid")
+        expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
       end
     end
   end

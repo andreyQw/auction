@@ -28,15 +28,24 @@ class Lot < ApplicationRecord
   has_many :bids
   has_one :order
 
-  enum status: [ :pending, :inProcess, :closed ]
+  enum status: [ :pending, :in_process, :closed ]
 
   validates :title, :current_price, :estimated_price, :lot_start_time, :lot_end_time,  presence: true
 
-  # validate :lot_start_time_must_be_more_then_now
-  #
-  # def lot_start_time_must_be_more_then_now
-  #   if DateTime.now > lot_start_time
-  #     errors.add(:lot_start_time, "Lot start time can't be less than current time")
-  #   end
-  # end
+  validates :current_price, :estimated_price, numericality: { greater_than: 0 }
+
+  validate :lot_start_time_must_be_more_then_now
+  validate :lot_end_time_must_be_more_lot_start_time
+
+  def lot_start_time_must_be_more_then_now
+    if lot_start_time < DateTime.now
+      errors.add(:lot_start_time, "Lot START time can't be less than current time")
+    end
+  end
+
+  def lot_end_time_must_be_more_lot_start_time
+    if lot_end_time <= lot_start_time
+      errors.add(:lot_end_time, "Lot END time can't be less than lot START time")
+    end
+  end
 end
