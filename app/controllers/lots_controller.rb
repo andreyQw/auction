@@ -1,10 +1,9 @@
 # frozen_string_literal: true
 
-class LotsController < ActionApiController
+class LotsController < ApiController
   before_action :authenticate_user!
 
   def index
-    skip_authorization
     if params[:user_id]
       return render_resources Lot.where(user_id: params[:user_id])
       # return render_resources Lot.where( status: :closed, user_id: current_user.id )
@@ -21,6 +20,7 @@ class LotsController < ActionApiController
 
   def show
     lot = Lot.find(params[:id])
+    authorize lot
     render_resource(lot)
   end
 

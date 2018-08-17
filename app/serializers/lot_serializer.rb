@@ -24,9 +24,8 @@
 #
 
 class LotSerializer < ActiveModel::Serializer
-  # attributes  :created_at, :updated_at
-  # attributes :id, :user_id, :title, :image, :description, :status, :current_price, :estimated_price, :lot_start_time, :lot_end_time
-  attributes :id, :user_id, :title
+  attributes :id, :user_id, :title, :image, :description, :status, :current_price, :estimated_price, :lot_start_time, :lot_end_time
+  # attributes :id, :user_id, :title
 
   belongs_to :user
 end

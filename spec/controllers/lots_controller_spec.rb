@@ -62,10 +62,12 @@ RSpec.describe LotsController, type: :controller do
         it "should use serializer" do
           get :index,  params: { user_id: @user.id }
 
-          lot = Lot.where(user_id: @user.id).first
-          serialize = LotSerializer.new(lot).as_json
+          lot_attributes = [
+              :id, :user_id, :title, :image, :description, :status, :current_price,
+              :estimated_price, :lot_start_time, :lot_end_time, :user
+          ]
 
-          expect(json_parse_response_body[:resources][0]).to eq(serialize)
+          expect(json_parse_response_body[:resources][0].keys).to eq(lot_attributes)
         end
       end
     end

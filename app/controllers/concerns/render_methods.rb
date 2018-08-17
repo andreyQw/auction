@@ -22,6 +22,6 @@ module RenderMethods
       per_page = params[:per_page]
       resources = resources.page(page).per(per_page) unless options[:pagination]
 
-      render json: resources, root: :resources, each_serializer: LotSerializer
+      render json: resources, root: :resources
     end
 end
