@@ -43,9 +43,10 @@ RSpec.describe LotsController, type: :controller do
           expect(json_parse_response_body[:resources].count).to eq(10)
         end
 
-        it "should return 1 lots with page 2" do
+        it "should return 1 lots with page 2, and meta(pagination)" do
           get :index, params: { page: 2 }
           expect(json_parse_response_body[:resources].count).to eq(1)
+          expect(json_parse_response_body[:meta].count).to be
         end
 
         it "should return 10 lots belongs_to user" do
@@ -59,7 +60,7 @@ RSpec.describe LotsController, type: :controller do
           expect(json_parse_response_body[:resources].count).to eq(3)
         end
 
-        it "should use serializer" do
+        it "should return correct fields" do
           get :index,  params: { user_id: @user.id }
 
           lot_attributes = [
@@ -91,7 +92,7 @@ RSpec.describe LotsController, type: :controller do
 
       it "response for create should be success" do
         subject
-        expect(response).to be_success
+        expect(response).to be_successful
       end
     end
 
@@ -134,7 +135,7 @@ RSpec.describe LotsController, type: :controller do
 
       it "response lot" do
         subject
-        expect(response).to be_success
+        expect(response).to be_successful
       end
     end
 

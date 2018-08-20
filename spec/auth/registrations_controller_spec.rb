@@ -21,7 +21,7 @@ RSpec.describe "Registration", type: :request do
 
       it "response should be success" do
         subject
-        expect(response).to be_success
+        expect(response).to be_successful
       end
 
       it "creates new user" do

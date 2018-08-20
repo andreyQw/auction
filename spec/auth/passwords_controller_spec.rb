@@ -11,7 +11,7 @@ RSpec.describe "Passwords", type: :request do
 
     it "should respond with success" do
       subject
-      expect(response).to be_success
+      expect(response).to be_successful
     end
   end
 
@@ -50,7 +50,7 @@ RSpec.describe "Passwords", type: :request do
 
       it "should respond with success" do
         subject
-        expect(response).to be_success
+        expect(response).to be_successful
         expect(JSON.parse(response.body, symbolize_names: true)[:message]).to eq("Your password has been successfully updated.")
       end
     end
@@ -67,7 +67,7 @@ RSpec.describe "Passwords", type: :request do
 
       it "should respond with success" do
         expect { subject }.to change { @user.reload.allow_password_change }.from(true).to(false)
-        expect(response).to be_success
+        expect(response).to be_successful
         expect(JSON.parse(response.body, symbolize_names: true)[:message]).to eq("Your password has been successfully updated.")
       end
     end
