@@ -1,13 +1,12 @@
 # frozen_string_literal: true
-
 # == Schema Information
 #
 # Table name: lots
 #
 #  id              :integer          not null, primary key
-#  current_price   :decimal(, )      not null
+#  current_price   :float            not null
 #  description     :string
-#  estimated_price :decimal(, )      not null
+#  estimated_price :float            not null
 #  image           :string
 #  lot_end_time    :datetime         not null
 #  lot_start_time  :datetime         not null

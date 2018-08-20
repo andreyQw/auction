@@ -5,8 +5,8 @@ class CreateLots < ActiveRecord::Migration[5.2]
       t.string :image
       t.string :description
       t.integer :status, default: 0, index: true
-      t.decimal :current_price, null: false
-      t.decimal :estimated_price, null: false
+      t.float :current_price, null: false
+      t.float :estimated_price, null: false
       t.datetime :lot_start_time, null: false
       t.datetime :lot_end_time, null: false
 
