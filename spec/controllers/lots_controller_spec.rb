@@ -95,31 +95,6 @@ RSpec.describe LotsController, type: :controller do
         expect(response).to be_successful
       end
     end
-
-    context "create lot should be errors " do
-      time = DateTime.now - 1.hour
-      before(:each) do
-        @lot = build(:lot)
-        @lot.title = nil
-        @lot.lot_start_time = time
-        @lot.lot_end_time = time
-      end
-
-      it "title is not valid" do
-        subject
-        expect(json_parse_response_body[:errors][:title]).to eq(["can't be blank"])
-      end
-
-      it "lot_start_time is not valid" do
-        subject
-        expect(json_parse_response_body[:errors][:lot_start_time]).to eq(["Lot START time can't be less than current time"])
-      end
-
-      it "lot_end_time is not valid" do
-        subject
-        expect(json_parse_response_body[:errors][:lot_end_time]).to eq(["Lot END time can't be less than lot START time"])
-      end
-    end
   end
 
   #

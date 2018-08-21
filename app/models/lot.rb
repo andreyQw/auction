@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: lots
@@ -27,16 +28,18 @@ class Lot < ApplicationRecord
   has_many :bids
   has_one :order
 
+  # after_create :lot_status_closed
+  # after_update :lot_status_closed
+
   enum status: [ :pending, :in_process, :closed ]
 
   validates :title, :current_price, :estimated_price, :lot_start_time, :lot_end_time,  presence: true
 
   validates :current_price, :estimated_price, numericality: { greater_than: 0 }
 
-  validate :lot_start_time_must_be_more_then_now
-  validate :lot_end_time_must_be_more_lot_start_time
+  validate :lot_start_time_must_be_more_than_now, :lot_end_time_must_be_more_lot_start_time
 
-  def lot_start_time_must_be_more_then_now
+  def lot_start_time_must_be_more_than_now
     if lot_start_time < DateTime.now
       errors.add(:lot_start_time, "Lot START time can't be less than current time")
     end
@@ -46,5 +49,9 @@ class Lot < ApplicationRecord
     if lot_end_time <= lot_start_time
       errors.add(:lot_end_time, "Lot END time can't be less than lot START time")
     end
+  end
+
+  def lot_status_closed
+    # do ... lot closed
   end
 end

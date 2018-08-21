@@ -8,21 +8,22 @@ RSpec.describe BidsController, type: :controller do
   #
   describe "POST /bids" do
     login(:user)
-    # subject { post :create, params: @bid }
-    # subject { post :create, params:  attributes_for(:bid) }
+
     before(:each) do
-      @lot = create(:lot)
+      @user2 = create(:user)
+      @lot = create(:lot, user_id: @user.id, status: :in_process)
       # @bid = attributes_for(:bid, lot_id: @lot.id, proposed_price: @lot.current_price + 1)
+      @proposed_price = @lot.current_price + 1
+    end
+    subject do
+      post :create, params: attributes_for(:bid, user_id: @user2.id, lot_id: @lot.id, proposed_price: @proposed_price)
     end
     context "create bid valid" do
 
       it "response for create should be success" do
-        # subject
-        request = post :create, params: attributes_for(:bid, lot_id: @lot.id, proposed_price: @lot.current_price + 1)
-        # lot_after = Lot.find(id: @lot.id)
-        lot_after = Lot.where(id: @lot.id)
-        expect(json_parse_response_body[:resource][:id]).to eq 1
-        expect { } .to change { @lot.current_price } .to(json_parse(lot_after.to_s))
+        expect(response).to be_successful
+        # json_parse_response_body[:resource][:proposed_price]
+        expect { subject }.to change { @lot.reload.current_price }.from(@lot.current_price).to(@proposed_price)
       end
     end
 
@@ -37,24 +38,6 @@ RSpec.describe BidsController, type: :controller do
       end
     end
 
-    context "create bid with not correct proposed_price" do
-      # before(:each) do
-      #   bid1 = create(:bid, proposed_price: @lot.current_price + 1)
-      #   qwe = 0
-      #   bid2 = build(:bid, proposed_price: @lot.current_price - 5)
-      # end
-      # subject { post :create, params: {
-      #     proposed_price: @bid2.proposed_price,
-      #     lot_id: @bid2.lot_id,
-      #   }
-      # }
 
-      it "proposed_price can't be blank" do
-        post :create, params: attributes_for(:bid, proposed_price: @lot.current_price + 1)
-        post :create, params: attributes_for(:bid, proposed_price:  @lot.current_price - 1)
-        # subject
-        expect(json_parse_response_body[:errors][:proposed_price].to_s).to match /proposed_price can't be less than lot.current_price/
-      end
-    end
   end
 end

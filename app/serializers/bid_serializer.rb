@@ -1,9 +1,10 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: bids
 #
 #  id             :integer          not null, primary key
-#  nickname       :string
 #  proposed_price :float
 #  created_at     :datetime
 #  lot_id         :integer
@@ -16,7 +17,7 @@
 #
 
 class BidSerializer < ActiveModel::Serializer
-  attributes :id, :proposed_price, :nickname
+  attributes :id, :proposed_price, :created_at
 
   # belongs_to :user
   # belongs_to :lot
