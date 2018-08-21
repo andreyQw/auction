@@ -4,7 +4,7 @@ require "rails_helper"
 
 RSpec.describe "Registration", type: :request do
   describe "POST create" do
-    context "when user is client" do
+    context "user regisration" do
       let(:data) do
         {
           email:                 "user@mail.co",
@@ -21,7 +21,7 @@ RSpec.describe "Registration", type: :request do
 
       it "response should be success" do
         subject
-        expect(response).to be_success
+        expect(response).to be_successful
       end
 
       it "creates new user" do

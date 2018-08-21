@@ -20,7 +20,7 @@ RSpec.describe "Login", type: :request do
 
       it "response should be success" do
         subject
-        expect(response).to be_success
+        expect(response).to be_successful
       end
     end
 
@@ -31,7 +31,7 @@ RSpec.describe "Login", type: :request do
 
       it "response should be success" do
         delete "/auth/sign_out", headers: @logged_user_headers
-        expect(response).to be_success
+        expect(response).to be_successful
       end
     end
 
