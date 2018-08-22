@@ -17,7 +17,7 @@
 #
 
 class BidSerializer < ActiveModel::Serializer
-  attributes :id, :proposed_price, :created_at
+  attributes :id, :proposed_price, :created_at, :user_id, :lot_id
 
   # belongs_to :user
   # belongs_to :lot

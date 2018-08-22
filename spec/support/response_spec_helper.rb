@@ -9,4 +9,8 @@ module ResponseHelpers
   def json_parse(string)
     JSON.parse(string, symbolize_names: true)
   end
+
+  def collection_serialize(collection, serializer)
+    ActiveModel::Serializer::CollectionSerializer.new(collection, each_serializer: serializer).to_json
+  end
 end

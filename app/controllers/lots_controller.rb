@@ -4,17 +4,19 @@ class LotsController < ApiController
   before_action :authenticate_user!
 
   def index
-    if params[:user_id]
-      return render_resources Lot.where(user_id: params[:user_id])
-      # return render_resources Lot.where( status: :closed, user_id: current_user.id )
+    filter = params[:filter]
+    if filter == "all" || filter == nil
+      return render_resources Lot.where(status: :in_process)
+    elsif filter == "created"
+      return render_resources Lot.where(user_id: current_user.id)
+    elsif filter == "participation"
+      lots = Lot.joins(:bids).where("bids.user_id = #{current_user.id}").distinct
+      return render_resources lots
     end
-    # lots = Lot.where(status: [:pending, :in_process])
-    render_resources Lot.where(status: :in_process)
   end
 
   def create
-    lot = Lot.new(lot_params.merge(user: current_user))
-    lot.save
+    lot = Lot.create(lot_params.merge(user: current_user))
     render_resource_or_errors(lot)
   end
 

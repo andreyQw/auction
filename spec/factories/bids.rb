@@ -21,7 +21,6 @@ FactoryBot.define do
     lot_id 1
     user_id 1
     proposed_price 100.00
-    nickname "Customer 1"
     created_at DateTime.now
   end
 end

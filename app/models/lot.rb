@@ -51,6 +51,7 @@ class Lot < ApplicationRecord
     end
   end
 
+  #
   def lot_status_closed
     # do ... lot closed
   end

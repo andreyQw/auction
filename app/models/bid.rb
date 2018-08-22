@@ -36,7 +36,7 @@ class Bid < ApplicationRecord
 
   def status_must_be_in_process
     if !lot.in_process?
-      errors.add(:lot, "Lot status must be in_progress")
+      errors.add(:lot, "Lot status must be in_process")
     end
   end
 

@@ -16,48 +16,43 @@ RSpec.describe LotsController, type: :controller do
     context "context: path with login, " do
       login(:user)
 
-      before(:each) do
-        create_list :lot, 3, user: @user
-      end
-
-      it "gives you a status 200 after sign_in " do
-        get :index
-        expect(response.status).to eq(200)
-      end
-
       context "should return all lots" do
         # config.default_per_page = 10
         before(:each) do
           create_list :lot, 10, user: @user
-          create_list :lot, 10, user: @user, status: :in_process
+          @lots_in_process = create_list :lot, 10, user: @user, status: :in_process
           create_list :lot, 2, user: @user, status: :closed
 
           @user2 = create :user
           create :lot, user: @user2
-          create :lot, user: @user2, status: :in_process
+          @lots_in_process_page_2 = create :lot, user: @user2, status: :in_process
           create :lot, user: @user2, status: :closed
         end
 
         it "should return 10 lots without params" do
           get :index
           expect(json_parse_response_body[:resources].count).to eq(10)
+          expect(response.body).to include(collection_serialize(@lots_in_process, "LotSerializer"))
+        end
+
+        it "should return: filter == 'created'" do
+          get :index,  params: { filter: "created", page: 3 }
+          expect(json_parse_response_body[:resources].count).to eq(2)
         end
 
         it "should return 1 lots with page 2, and meta(pagination)" do
           get :index, params: { page: 2 }
           expect(json_parse_response_body[:resources].count).to eq(1)
           expect(json_parse_response_body[:meta].count).to be
+          serialization = ActiveModelSerializers::SerializableResource.new(@lots_in_process_page_2, serializer: LotSerializer).to_json
+          expect(json_parse_response_body[:resources][0]).to eq(json_parse(serialization)[:lot])
         end
+
 
         it "should return 10 lots belongs_to user" do
           # get :index, params: { page: 2, user_id: @user2.id }
           get :index, params: { user_id: @user.id }
           expect(json_parse_response_body[:resources].count).to eq(10)
-        end
-
-        it "should return 3 lots not belongs_to user" do
-          get :index, params: { user_id: @user2.id }
-          expect(json_parse_response_body[:resources].count).to eq(3)
         end
 
         it "should return correct fields" do
@@ -68,8 +63,42 @@ RSpec.describe LotsController, type: :controller do
               :estimated_price, :lot_start_time, :lot_end_time, :user
           ]
 
-          expect(json_parse_response_body[:resources][0].keys).to eq(lot_attributes)
+          expect(json_parse_response_body[:resources].first.keys).to eq(lot_attributes)
         end
+
+        it "should return: filter == 'all'" do
+          get :index,  params: { filter: "all" }
+          expect(json_parse_response_body[:resources].count).to eq(10)
+        end
+
+        context "filter with bid" do
+          before(:each) do
+            # @user - login
+            # @user2
+            @user3 = create :user
+            lot1 = create :lot, current_price: 10.00, status: :in_process, user: @user
+            bid1 = create :bid, proposed_price: 11.00, lot_id: lot1.id, user_id: @user2.id
+
+            @lot2 = create :lot, current_price: 15.00, status: :in_process, user: @user2
+            bid2  = create :bid, proposed_price: 16.00, lot_id: @lot2.id, user_id: @user.id
+            bid23 = create :bid, proposed_price: 17.00, lot_id: @lot2.id, user_id: @user3.id
+            bid24 = create :bid, proposed_price: 18.00, lot_id: @lot2.id, user_id: @user.id
+            @lot2.update(status: :closed)
+
+            @lot3 = create :lot, current_price: 20.00, status: :in_process, user: @user3
+            bid3  = create :bid, proposed_price: 21.00, lot_id: @lot3.id, user_id: @user.id
+            bid32 = create :bid, proposed_price: 22.00, lot_id: @lot3.id, user_id: @user2.id
+          end
+
+          it "should return lots with: filter == 'participation'" do
+            get :index,  params: { filter: "participation" }
+            # json_parse_response_body[:resources][0][:bids]
+            expect(json_parse_response_body[:resources].count).to eq(2)
+            expect(json_parse_response_body[:resources][0][:id]).to eq(@lot2.id)
+            expect(json_parse_response_body[:resources][1][:id]).to eq(@lot3.id)
+          end
+        end
+
       end
     end
   end

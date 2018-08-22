@@ -52,13 +52,13 @@ RSpec.describe Bid, type: :model do
     it "should be not valid if lot status :pending" do
       bid = build(:bid, lot_id: @lot2.id, user: @user2, proposed_price: 11.00)
       expect(bid).to_not be_valid
-      expect(bid.errors.messages).to eq lot: ["Lot status must be in_progress"]
+      expect(bid.errors.messages).to eq lot: ["Lot status must be in_process"]
     end
 
     it "should be not valid if lot status :closed" do
       bid = build(:bid, lot_id: @lot3.id, user: @user2, proposed_price: 11.00)
       expect(bid).to_not be_valid
-      expect(bid.errors.messages).to eq lot: ["Lot status must be in_progress"]
+      expect(bid.errors.messages).to eq lot: ["Lot status must be in_process"]
     end
   end
 end
