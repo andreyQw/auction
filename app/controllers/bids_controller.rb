@@ -4,7 +4,6 @@ class BidsController < ApiController
   before_action :authenticate_user!
 
   def index
-    # render_resources Bid.where(lot_id: params[:lot_id])
     render_resources Bid.all
   end
 

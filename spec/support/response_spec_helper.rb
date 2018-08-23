@@ -13,4 +13,8 @@ module ResponseHelpers
   def collection_serialize(collection, serializer)
     ActiveModel::Serializer::CollectionSerializer.new(collection, each_serializer: serializer).to_json
   end
+
+  def obj_serialization(obj, **serializer)
+    ActiveModelSerializers::SerializableResource.new(obj, serializer).to_json
+  end
 end

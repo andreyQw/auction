@@ -5,7 +5,6 @@ include ActionController::RespondWith
 
 RSpec.describe LotsController, type: :controller do
 
-  #
   describe "GET /lots" do
 
     it "error - You need to sign_in/sign_up" do
@@ -19,18 +18,40 @@ RSpec.describe LotsController, type: :controller do
       context "should return all lots" do
         # config.default_per_page = 10
         before(:each) do
-          create_list :lot, 10, user: @user
+          @lots_pending    = create_list :lot, 10, user: @user, status: :pending
           @lots_in_process = create_list :lot, 10, user: @user, status: :in_process
-          create_list :lot, 2, user: @user, status: :closed
+          @lots_closed     = create_list :lot, 2, user: @user, status: :closed
 
           @user2 = create :user
-          create :lot, user: @user2
-          @lots_in_process_page_2 = create :lot, user: @user2, status: :in_process
-          create :lot, user: @user2, status: :closed
+          @lot_user2_pending   = create :lot, user: @user2, status: :pending
+          @lot_user2_in_proces = create :lot, user: @user2, status: :in_process
+          @lot_user2_closed    = create :lot, user: @user2, status: :closed
         end
 
-        it "should return 10 lots without params" do
+        it "should return 10 lots, without params (all lots with status: :in_process)" do
           get :index
+          expect(json_parse_response_body[:resources].count).to eq(10)
+          expect(response.body).to include(collection_serialize(@lots_in_process, "LotSerializer"))
+        end
+
+        it "should return 1 lot with status in_process, with page 2, and meta(pagination) " do
+          get :index, params: { page: 2 }
+          expect(json_parse_response_body[:resources].count).to eq(1)
+          expect(json_parse_response_body[:meta].count).to be
+          expect(json_parse_response_body[:resources].first).to eq(json_parse(obj_serialization(@lot_user2_in_proces, serializer: LotSerializer))[:lot])
+        end
+
+        it "serializer: should return correct fields" do
+          get :index,  params: { user_id: @user.id }
+
+          lot_attributes = [:id, :user_id, :title, :image, :description, :status, :current_price,
+                            :estimated_price, :lot_start_time, :lot_end_time]
+
+          expect(json_parse_response_body[:resources].first.keys).to eq(lot_attributes)
+        end
+
+        it "should return lots with status in_process: filter == 'all'" do
+          get :index,  params: { filter: "all" }
           expect(json_parse_response_body[:resources].count).to eq(10)
           expect(response.body).to include(collection_serialize(@lots_in_process, "LotSerializer"))
         end
@@ -38,40 +59,10 @@ RSpec.describe LotsController, type: :controller do
         it "should return: filter == 'created'" do
           get :index,  params: { filter: "created", page: 3 }
           expect(json_parse_response_body[:resources].count).to eq(2)
+          expect(json_parse_response_body[:meta][:total_count_resources]).to eq(22)
         end
 
-        it "should return 1 lots with page 2, and meta(pagination)" do
-          get :index, params: { page: 2 }
-          expect(json_parse_response_body[:resources].count).to eq(1)
-          expect(json_parse_response_body[:meta].count).to be
-          serialization = ActiveModelSerializers::SerializableResource.new(@lots_in_process_page_2, serializer: LotSerializer).to_json
-          expect(json_parse_response_body[:resources][0]).to eq(json_parse(serialization)[:lot])
-        end
-
-
-        it "should return 10 lots belongs_to user" do
-          # get :index, params: { page: 2, user_id: @user2.id }
-          get :index, params: { user_id: @user.id }
-          expect(json_parse_response_body[:resources].count).to eq(10)
-        end
-
-        it "should return correct fields" do
-          get :index,  params: { user_id: @user.id }
-
-          lot_attributes = [
-              :id, :user_id, :title, :image, :description, :status, :current_price,
-              :estimated_price, :lot_start_time, :lot_end_time, :user
-          ]
-
-          expect(json_parse_response_body[:resources].first.keys).to eq(lot_attributes)
-        end
-
-        it "should return: filter == 'all'" do
-          get :index,  params: { filter: "all" }
-          expect(json_parse_response_body[:resources].count).to eq(10)
-        end
-
-        context "filter with bid" do
+        context "should return: (lots that user won/try to win)" do
           before(:each) do
             # @user - login
             # @user2
@@ -106,19 +97,8 @@ RSpec.describe LotsController, type: :controller do
   #
   describe "POST /lots" do
     login(:user)
-    subject { post :create, params: {
-        title: @lot.title,
-        current_price: @lot.current_price,
-        estimated_price: @lot.estimated_price,
-        lot_start_time: @lot.lot_start_time,
-        lot_end_time: @lot.lot_end_time,
-      }
-    }
+    subject { post :create, params: attributes_for(:lot) }
     context "create lot valid" do
-      before(:each) do
-        @lot = build(:lot)
-      end
-
       it "response for create should be success" do
         subject
         expect(response).to be_successful
@@ -132,19 +112,19 @@ RSpec.describe LotsController, type: :controller do
 
     subject { get :show, params: { id: @lot.id } }
 
-    context "show lot details " do
+    context "should return lot serialize" do
       before(:each) do
         @lot = create(:lot, user: @user, status: :pending)
       end
 
       it "response lot" do
         subject
-        expect(response).to be_successful
+        expect(json_parse_response_body[:resource]).to eq(json_parse(obj_serialization(@lot, serializer: LotSerializer))[:lot])
       end
     end
 
     context "lot not found" do
-      subject { get :show, params: { id: 2 } }
+      subject { get :show, params: { id: @lot.id + 1 } }
 
       before(:each) do
         @lot = create(:lot, user: @user, status: :pending)
@@ -238,7 +218,7 @@ RSpec.describe LotsController, type: :controller do
 
         it "should not delete (status: :in_process)" do
           subject
-          expect(Lot.where(id: @lot.id).present?).to be
+          expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
         end
       end
 
@@ -248,7 +228,7 @@ RSpec.describe LotsController, type: :controller do
         end
         it "should not delete (status: :closed)" do
           subject
-          expect(Lot.where(id: @lot.id).present?).to be
+          expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
         end
       end
     end
