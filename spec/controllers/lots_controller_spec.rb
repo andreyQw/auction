@@ -45,7 +45,7 @@ RSpec.describe LotsController, type: :controller do
           get :index,  params: { user_id: @user.id }
 
           lot_attributes = [:id, :user_id, :title, :image, :description, :status, :current_price,
-                            :estimated_price, :lot_start_time, :lot_end_time]
+                            :estimated_price, :lot_start_time, :lot_end_time, :bids]
 
           expect(json_parse_response_body[:resources].first.keys).to eq(lot_attributes)
         end
@@ -114,7 +114,10 @@ RSpec.describe LotsController, type: :controller do
 
     context "should return lot serialize" do
       before(:each) do
-        @lot = create(:lot, user: @user, status: :pending)
+        @user2 = create(:user)
+        @lot = create(:lot, user: @user, status: :in_process)
+        @bid = create(:bid, user_id: @user2.id, lot_id: @lot.id, proposed_price: @lot.current_price + 1)
+        @bid2 = create(:bid, user_id: @user2.id, lot_id: @lot.id, proposed_price: @lot.current_price + 2)
       end
 
       it "response lot" do

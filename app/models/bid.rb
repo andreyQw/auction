@@ -20,7 +20,7 @@ class Bid < ApplicationRecord
   belongs_to :user
   belongs_to :lot
 
-  after_create :change_lot_current_price
+  after_create :change_lot_current_price, :lot_closed
 
   validates :proposed_price, :lot_id,  presence: true
 
