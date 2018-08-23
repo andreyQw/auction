@@ -45,6 +45,9 @@ class User < ApplicationRecord
           :recoverable, :rememberable, :trackable, :validatable,
           :confirmable
 
+  has_many :lots
+  has_many :bids
+
   validates :email, :phone, :first_name, :last_name, :birthday,  presence: true
 
   validates :email, uniqueness: true
@@ -57,6 +60,8 @@ class User < ApplicationRecord
     end
   end
 
-  has_many :lots
-  has_many :bids
+  def self.all_except(user_id)
+    where.not(id: user_id)
+  end
+
 end
