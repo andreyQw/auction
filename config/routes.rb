@@ -8,5 +8,6 @@ Rails.application.routes.draw do
   resources :lots
   resources :bids, except: [:update, :destroy]
 
-  # root 'welcome#index'
+  require "sidekiq/web"
+  mount Sidekiq::Web => "/sidekiq"
 end

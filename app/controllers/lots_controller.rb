@@ -17,6 +17,8 @@ class LotsController < ApiController
 
   def create
     lot = Lot.create(lot_params.merge(user: current_user))
+    LotsStatusInProcessJob.set(wait_until: lot.lot_start_time).perform_later(lot.id)
+    LotsStatusClosedJob.set(wait_until: lot.lot_end_time).perform_later(lot.id)
     render_resource_or_errors(lot)
   end
 

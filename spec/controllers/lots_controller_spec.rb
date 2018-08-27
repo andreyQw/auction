@@ -96,10 +96,25 @@ RSpec.describe LotsController, type: :controller do
 
   #
   describe "POST /lots" do
+    # ActiveJob::Base.queue_adapter = :test
     login(:user)
-    subject { post :create, params: attributes_for(:lot) }
+    subject { post :create, params: @params }
+    time = DateTime.now
+    before(:each) do
+      @params = attributes_for(:lot, lot_start_time: time + 5.second, lot_end_time: time + 10.second, status: :pending)
+    end
     context "create lot valid" do
       it "response for create should be success" do
+        subject
+        expect(response).to be_successful
+      end
+    end
+
+    context "sidekiq test" do
+      before(:each) do
+        @params = attributes_for(:lot, lot_start_time: time + 1.second, lot_end_time: time + 10.second)
+      end
+      it "response with LotJob" do
         subject
         expect(response).to be_successful
       end
