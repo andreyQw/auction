@@ -48,6 +48,8 @@ class User < ApplicationRecord
   has_many :lots
   has_many :bids
 
+  scope :all_users_except_this, lambda { |user_id| where.not(id: user_id) }
+
   validates :email, :phone, :first_name, :last_name, :birthday,  presence: true
 
   validates :email, uniqueness: true
@@ -59,9 +61,4 @@ class User < ApplicationRecord
       errors.add(:birthday, "Age can't be less then 21 year")
     end
   end
-
-  def self.all_except(user_id)
-    where.not(id: user_id)
-  end
-
 end

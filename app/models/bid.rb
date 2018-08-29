@@ -20,6 +20,7 @@ class Bid < ApplicationRecord
   belongs_to :user
   belongs_to :lot
 
+
   after_create :change_lot_current_price, :lot_closed
 
   validates :proposed_price, :lot_id,  presence: true
@@ -35,9 +36,7 @@ class Bid < ApplicationRecord
   end
 
   def status_must_be_in_process
-    if !lot.in_process?
-      errors.add(:lot, "Lot status must be in_process")
-    end
+    errors.add(:base, "Lot status must be in_process") unless lot.in_process?
   end
 
   def user_must_be_not_owner
@@ -53,7 +52,8 @@ class Bid < ApplicationRecord
 
   def lot_closed
     if proposed_price >= lot.estimated_price
-      lot.update(status: "closed")
+      lot.update(status: "closed", bid_win: id)
+      lot.update_lot_jobs
     end
   end
 end

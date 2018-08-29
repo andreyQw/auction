@@ -15,7 +15,7 @@ RSpec.describe LotsController, type: :controller do
     context "context: path with login, " do
       login(:user)
 
-      context "should return all lots" do
+      context "should return lots" do
         # config.default_per_page = 10
         before(:each) do
           @lots_pending    = create_list :lot, 10, user: @user, status: :pending
@@ -28,7 +28,7 @@ RSpec.describe LotsController, type: :controller do
           @lot_user2_closed    = create :lot, user: @user2, status: :closed
         end
 
-        it "should return 10 lots, without params (all lots with status: :in_process)" do
+        it "should return first 10 lots, without params (lots with status: :in_process)" do
           get :index
           expect(json_parse_response_body[:resources].count).to eq(10)
           expect(response.body).to include(collection_serialize(@lots_in_process, "LotSerializer"))
@@ -52,8 +52,9 @@ RSpec.describe LotsController, type: :controller do
 
         it "should return lots with status in_process: filter == 'all'" do
           get :index,  params: { filter: "all" }
-          expect(json_parse_response_body[:resources].count).to eq(10)
-          expect(response.body).to include(collection_serialize(@lots_in_process, "LotSerializer"))
+          lots = json_parse_response_body[:resources]
+          expect(lots.count).to eq(10)
+          expect(lots).to all(include(user_id: @user.id))
         end
 
         it "should return: filter == 'created'" do
@@ -95,13 +96,36 @@ RSpec.describe LotsController, type: :controller do
   end
 
   #
+  describe "PUT /lots/:id with JOBS" do
+    time = DateTime.now
+    login(:user)
+    before(:each) do
+      @lot = create :lot, user: @user, status: :pending, lot_start_time: time + 120.second, lot_end_time: time + 180.second
+    end
+
+    subject { put :update, params: { id: @lot.id, lot_start_time: time + 180.second, lot_end_time: time + 240.second } }
+
+    context "update with valid user and :pending status" do
+      it "should update" do
+
+        subject
+        expect(response).to be_successful
+        # expect().to change { @lot.reload.title } .to("New title")
+      end
+      # after(:all) do
+      #   @lot.destroy
+      # end
+    end
+
+  end
+  #
   describe "POST /lots" do
     # ActiveJob::Base.queue_adapter = :test
     login(:user)
     subject { post :create, params: @params }
-    time = DateTime.now
+    time = DateTime.now.utc
     before(:each) do
-      @params = attributes_for(:lot, lot_start_time: time + 5.second, lot_end_time: time + 10.second, status: :pending)
+      @params = attributes_for(:lot, lot_start_time: time + 20.second, lot_end_time: time + 40.second, status: :pending)
     end
     context "create lot valid" do
       it "response for create should be success" do
@@ -112,7 +136,7 @@ RSpec.describe LotsController, type: :controller do
 
     context "sidekiq test" do
       before(:each) do
-        @params = attributes_for(:lot, lot_start_time: time + 1.second, lot_end_time: time + 10.second)
+        @params = attributes_for(:lot, lot_start_time: time + 10.second, lot_end_time: time + 15.second)
       end
       it "response with LotJob" do
         subject
@@ -137,7 +161,7 @@ RSpec.describe LotsController, type: :controller do
 
       it "response lot" do
         subject
-        expect(json_parse_response_body[:resource]).to eq(json_parse(obj_serialization(@lot, serializer: LotSerializer))[:lot])
+        expect(json_parse_response_body[:resource]).to eq(json_parse(obj_serialization(@lot.reload, serializer: LotSerializer))[:lot])
       end
     end
 

@@ -18,7 +18,7 @@ users.each do |user|
 end
 
 Lot.all.each do |lot|
-  users = User.all_except(lot.user_id)
+  users = User.all_users_except_this(lot.user_id)
   users.each_with_index do |user, index|
     FactoryBot.create :bid, lot_id: lot.id, user_id: user.id, proposed_price: lot.current_price + index + 1
   end

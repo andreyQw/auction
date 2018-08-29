@@ -5,20 +5,18 @@ class LotsController < ApiController
 
   def index
     filter = params[:filter]
-    if filter == "all" || filter == nil
-      return render_resources Lot.where(status: :in_process)
+    if filter == "all"
+      return render_resources Lot.my_lots_all(current_user.id)
     elsif filter == "created"
-      return render_resources Lot.where(user_id: current_user.id)
+      return render_resources Lot.my_lots_created(current_user.id)
     elsif filter == "participation"
-      lots = Lot.joins(:bids).where("bids.user_id = #{current_user.id}").distinct
-      return render_resources lots
+      return render_resources Lot.my_lots_participation(current_user.id)
     end
+    render_resources Lot.lots_in_process
   end
 
   def create
     lot = Lot.create(lot_params.merge(user: current_user))
-    LotsStatusInProcessJob.set(wait_until: lot.lot_start_time).perform_later(lot.id)
-    LotsStatusClosedJob.set(wait_until: lot.lot_end_time).perform_later(lot.id)
     render_resource_or_errors(lot)
   end
 
