@@ -17,4 +17,13 @@ module ResponseHelpers
   def obj_serialization(obj, **serializer)
     ActiveModelSerializers::SerializableResource.new(obj, serializer).to_json
   end
+
+  def user_name_alias(user_id, lot_id)
+    if user_id == @user.id
+      "You"
+    else
+      crypt = (user_id.to_s + lot_id.to_s).crypt("qweqwe")
+      "Customer #{crypt}"
+    end
+  end
 end

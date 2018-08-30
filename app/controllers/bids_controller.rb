@@ -3,13 +3,9 @@
 class BidsController < ApiController
   before_action :authenticate_user!
 
-  def index
-    render_resources Bid.all
-  end
-
   def create
     bid = Bid.create(bid_params)
-    render_resource_or_errors(bid)
+    render_resource_or_errors(bid, serializer: BidSerializer, current_user_id: current_user.id)
   end
 
   def bid_params

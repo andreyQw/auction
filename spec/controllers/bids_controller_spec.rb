@@ -12,14 +12,8 @@ RSpec.describe BidsController, type: :controller do
     before(:each) do
       time = DateTime.now
       @user2 = create(:user)
-      @lot = create(:lot,
-                    user_id: @user.id,
-                    status: :in_process,
-                    lot_start_time: time + 60.second,
-                    lot_end_time: time + 120.second,
-                    current_price: 10.00,
-                    estimated_price: 15.00
-      )
+      @lot = create(:lot, user_id: @user.id, status: :in_process, lot_start_time: time + 60.second, lot_end_time: time + 120.second, current_price: 10.00, estimated_price: 15.00)
+      @lot2 = create(:lot, user_id: @user2.id, status: :in_process, lot_start_time: time + 60.second, lot_end_time: time + 120.second, current_price: 10.00, estimated_price: 15.00)
       @proposed_price = @lot.current_price + 10
     end
 
@@ -28,31 +22,34 @@ RSpec.describe BidsController, type: :controller do
     end
 
     context "create bid_win" do
-      it "response should with set lot.bid_win" do
+      it "response should be with set lot.bid_win" do
         subject
-        expect(response).to be_successful
-        expect { subject }.to change { @lot.reload.current_price }.from(@lot.current_price).to(@proposed_price)
+        expect(json_parse_response_body[:resource][:id]).to eq(@lot.reload.bid_win)
       end
     end
 
     context "create not bid_win" do
-      it "response should" do
+      it "response should create bid, end not add to @lot.bid_win" do
+        @proposed_price = rand(@lot.current_price...@lot.estimated_price)
         subject
-        expect(response).to be_successful
+        expect(@lot.reload.bid_win).to eq(nil)
       end
     end
 
-    context "create bid with 'Customer xxx'" do
-      it "response should" do
+    context "create bid 'Customer xxx'" do
+      it "response with with :user_name_alias 'Customer xxx'" do
         subject
-        expect(response).to be_successful
+        expect(json_parse_response_body[:resource][:user_name_alias]).to eq(user_name_alias(@user2.id, @lot.id))
       end
     end
 
-    context "create bid with 'You'" do
-      it "response should " do
+    context "create bid 'You'" do
+      subject do
+        post :create, params: attributes_for(:bid, user_id: @user.id, lot_id: @lot2.id, proposed_price: @proposed_price)
+      end
+      it "response with :user_name_alias 'You'" do
         subject
-        expect(response).to be_successful
+        expect(json_parse_response_body[:resource][:user_name_alias]).to eq(user_name_alias(@user.id, @lot2.id))
       end
     end
 
