@@ -53,7 +53,6 @@ class Bid < ApplicationRecord
   def lot_closed
     if proposed_price >= lot.estimated_price
       lot.update(status: "closed", bid_win: id)
-      lot.update_lot_jobs
     end
   end
 end

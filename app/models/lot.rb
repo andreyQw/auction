@@ -32,7 +32,7 @@ class Lot < ApplicationRecord
   has_one :order
 
   after_create :push_job_id_to_lot
-  after_update :update_lot_jobs
+  after_update :update_lot_jobs, :send_mail_after_closed
 
   scope :my_lots_all, lambda { |current_user_id| left_joins(:bids).where("lots.user_id = :user_id OR bids.user_id = :user_id", user_id: current_user_id).distinct }
   scope :my_lots_created, lambda { |current_user_id| where(user_id: current_user_id) }
@@ -86,5 +86,14 @@ class Lot < ApplicationRecord
     job_closed = LotsStatusClosedJob.set(wait_until: lot_end_time).perform_later("lot_id:#{id}")
 
     { job_id_in_process: job_in_process.provider_job_id, job_id_closed: job_closed.provider_job_id }
+  end
+
+  def send_mail_after_closed
+    if status == "closed"
+      UserMailer.email_for_seller_lot_closed self
+      if bid_win
+        UserMailer.email_for_lot_winner self
+      end
+    end
   end
 end

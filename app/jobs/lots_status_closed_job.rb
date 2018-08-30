@@ -13,6 +13,6 @@ class LotsStatusClosedJob < ApplicationJob
   end
 
   def get_value(string)
-    val = string.split(":").last
+    string.split(":").last
   end
 end

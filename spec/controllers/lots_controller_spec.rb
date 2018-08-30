@@ -5,7 +5,11 @@ include ActionController::RespondWith
 
 RSpec.describe LotsController, type: :controller do
 
+  include ActiveJob::TestHelper
+
   describe "GET /lots" do
+
+    after { clear_enqueued_jobs }
 
     it "error - You need to sign_in/sign_up" do
       get :index
@@ -90,7 +94,6 @@ RSpec.describe LotsController, type: :controller do
             expect(json_parse_response_body[:resources][1][:id]).to eq(@lot3.id)
           end
         end
-
       end
     end
   end

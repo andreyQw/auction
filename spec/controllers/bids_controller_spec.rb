@@ -65,6 +65,5 @@ RSpec.describe BidsController, type: :controller do
         expect(json_parse_response_body[:errors][:proposed_price].to_s).to match /can't be blank/
       end
     end
-
   end
 end
