@@ -3,7 +3,7 @@
 class LotsStatusInProcessJob < ApplicationJob
   queue_as :default
 
-  def perform(lot_id, lot_start_time, status)
+  def perform(lot_id)
     lot = Lot.find(get_value(lot_id))
     if lot
       puts "LotsStatusInProcessJob: lot_id= #{lot.id} status BEFORE updated = #{lot.status}"
@@ -13,6 +13,6 @@ class LotsStatusInProcessJob < ApplicationJob
   end
 
   def get_value(string)
-    val = string.split(":").last
+    string.split(":").last
   end
 end
