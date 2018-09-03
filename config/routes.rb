@@ -6,7 +6,8 @@ Rails.application.routes.draw do
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
 
   resources :lots
-  resources :bids, except: [:update, :destroy]
+  resources :bids, only: [:create]
 
-  # root 'welcome#index'
+  require "sidekiq/web"
+  mount Sidekiq::Web => "/sidekiq"
 end

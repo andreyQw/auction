@@ -1,9 +1,10 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: bids
 #
 #  id             :integer          not null, primary key
-#  nickname       :string
 #  proposed_price :float
 #  created_at     :datetime
 #  lot_id         :integer
@@ -16,7 +17,16 @@
 #
 
 class BidSerializer < ActiveModel::Serializer
-  attributes :id, :proposed_price, :nickname
+  attributes :id, :proposed_price, :created_at, :user_id, :lot_id, :user_name_alias
+
+  def user_name_alias
+    if object.user_id == @instance_options[:current_user_id]
+      "You"
+    else
+      crypt = (object.user_id.to_s + object.lot_id.to_s).crypt("qweqwe")
+      "Customer #{crypt}"
+    end
+  end
 
   # belongs_to :user
   # belongs_to :lot

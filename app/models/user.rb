@@ -45,6 +45,11 @@ class User < ApplicationRecord
           :recoverable, :rememberable, :trackable, :validatable,
           :confirmable
 
+  has_many :lots
+  has_many :bids
+
+  scope :all_users_except_this, lambda { |user_id| where.not(id: user_id) }
+
   validates :email, :phone, :first_name, :last_name, :birthday,  presence: true
 
   validates :email, uniqueness: true
@@ -56,7 +61,4 @@ class User < ApplicationRecord
       errors.add(:birthday, "Age can't be less then 21 year")
     end
   end
-
-  has_many :lots
-  has_many :bids
 end

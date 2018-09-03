@@ -1,10 +1,10 @@
 # frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: bids
 #
 #  id             :integer          not null, primary key
-#  nickname       :string
 #  proposed_price :float
 #  created_at     :datetime
 #  lot_id         :integer
@@ -19,13 +19,15 @@
 class Bid < ApplicationRecord
   belongs_to :user
   belongs_to :lot
-  after_create :change_lot_current_price
+
+
+  after_create :change_lot_current_price, :lot_closed
 
   validates :proposed_price, :lot_id,  presence: true
 
   validates :proposed_price, numericality: { greater_than: 0 }
 
-  validate :more_than_last_proposed_price
+  validate :more_than_last_proposed_price, :status_must_be_in_process, :user_must_be_not_owner
 
   def more_than_last_proposed_price
     if proposed_price == nil || lot.current_price > proposed_price
@@ -33,8 +35,24 @@ class Bid < ApplicationRecord
     end
   end
 
+  def status_must_be_in_process
+    errors.add(:base, "Lot status must be in_process") unless lot.in_process?
+  end
+
+  def user_must_be_not_owner
+    if user.id == lot.user_id
+      errors.add(:user, "Lot owner can't create bid for his lot")
+    end
+  end
+
 
   def change_lot_current_price
     lot.update(current_price: proposed_price)
+  end
+
+  def lot_closed
+    if proposed_price >= lot.estimated_price
+      lot.update(status: "closed", bid_win: id)
+    end
   end
 end

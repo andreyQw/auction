@@ -8,5 +8,19 @@
 
 require "factory_bot"
 
-FactoryBot.create_list :user, 3
-FactoryBot.create_list :lot, 2
+
+users = FactoryBot.create_list :user, 3
+p "Created #{users.count} records with users"
+
+users.each do |user|
+  lots = FactoryBot.create_list(:lot, 3, user_id: user.id, status: :in_process)
+  p "  Created #{lots.count} lots for #{user.email}"
+end
+
+Lot.all.each do |lot|
+  users = User.all_users_except_this(lot.user_id)
+  users.each_with_index do |user, index|
+    FactoryBot.create :bid, lot_id: lot.id, user_id: user.id, proposed_price: lot.current_price + index + 1
+  end
+end
+p "   Created records with bids"

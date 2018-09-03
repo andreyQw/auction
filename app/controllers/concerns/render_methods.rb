@@ -23,7 +23,8 @@ module RenderMethods
       resources = resources.page(page).per(per_page) unless options[:pagination]
       meta = {
           current_page: resources.current_page,
-          total: resources.total_pages
+          total_pages: resources.total_pages,
+          total_count_resources: resources.total_count
       }
 
       render({ json: resources, root: :resources, **options }.merge(meta: meta))

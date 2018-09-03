@@ -10,14 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_08_20_073221) do
+ActiveRecord::Schema.define(version: 2018_08_29_140248) do
 
   create_table "bids", force: :cascade do |t|
     t.float "proposed_price"
     t.datetime "created_at"
     t.integer "lot_id"
     t.integer "user_id"
-    t.string "nickname"
     t.index ["lot_id"], name: "index_bids_on_lot_id"
     t.index ["user_id"], name: "index_bids_on_user_id"
   end
@@ -34,6 +33,9 @@ ActiveRecord::Schema.define(version: 2018_08_20_073221) do
     t.integer "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "job_id_in_process"
+    t.string "job_id_closed"
+    t.integer "bid_win"
     t.index ["status"], name: "index_lots_on_status"
     t.index ["user_id"], name: "index_lots_on_user_id"
   end
