@@ -21,6 +21,12 @@ RSpec.describe BidsController, type: :controller do
       post :create, params: attributes_for(:bid, user_id: @user2.id, lot_id: @lot.id, proposed_price: @proposed_price)
     end
 
+    it "should broadcast bid send to lot chanel" do
+      expect { subject }
+          .to have_broadcasted_to("bids_for_lot_#{@lot.id}")
+                  .with(a_hash_including(user_name_alias: user_name_alias(@user2.id, @lot.id)))
+    end
+
     context "create bid_win" do
       it "response should be with set lot.bid_win" do
         subject

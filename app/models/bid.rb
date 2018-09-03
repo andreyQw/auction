@@ -57,6 +57,6 @@ class Bid < ApplicationRecord
   end
 
   def broadcast_bid
-    ActionCable.server.broadcast("bids_for_lot_#{lot.id}", self)
+    ActionCable.server.broadcast("bids_for_lot_#{lot.id}", BidSerializer.new(self))
   end
 end
