@@ -5,6 +5,7 @@ require "rails_helper"
 RSpec.describe UserMailer, type: :mailer do
 
   # let(:mail) { described_class.instructions(user).deliver_now }
+  let(:mail_for_seller_lot_not_sold) { UserMailer.email_for_seller_lot_not_sold @lot }
   let(:mail_for_seller) { UserMailer.email_for_seller_lot_closed @lot }
   let(:mail_for_customer) { UserMailer.email_for_lot_winner @lot }
 
@@ -29,8 +30,17 @@ RSpec.describe UserMailer, type: :mailer do
       it "check mail for seller" do
         expect(mail_for_seller.to).to eq([@user_seller.email])
         expect(mail_for_seller.from).to eq(["from@example.com"])
-        expect(mail_for_seller.body).to match /Current price: #{@lot.current_price}/
+        expect(mail_for_seller.body).to match /Your lot - #{@lot.title}, was closed./
       end
+    end
+
+  end
+
+  context "check mail for seller lot not sold" do
+    it "should not sold" do
+      expect(mail_for_seller_lot_not_sold.to).to eq([@user_seller.email])
+      expect(mail_for_seller_lot_not_sold.from).to eq(["from@example.com"])
+      expect(mail_for_seller_lot_not_sold.body).to match /Your lot - #{@lot.title}, was closed but not sold./
     end
   end
 end

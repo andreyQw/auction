@@ -49,7 +49,7 @@ RSpec.describe LotsController, type: :controller do
           get :index,  params: { user_id: @user.id }
 
           lot_attributes = [:id, :user_id, :title, :image, :description, :status, :current_price,
-                            :estimated_price, :lot_start_time, :lot_end_time, :bids]
+                            :estimated_price, :lot_start_time, :lot_end_time, :bid_win, :user_win_id, :bids]
 
           expect(json_parse_response_body[:resources].first.keys).to eq(lot_attributes)
         end
@@ -160,6 +160,7 @@ RSpec.describe LotsController, type: :controller do
         @lot = create(:lot, user: @user, status: :in_process)
         @bid = create(:bid, user_id: @user2.id, lot_id: @lot.id, proposed_price: @lot.current_price + 1)
         @bid2 = create(:bid, user_id: @user2.id, lot_id: @lot.id, proposed_price: @lot.current_price + 2)
+        @bid3 = create(:bid, user_id: @user2.id, lot_id: @lot.id, proposed_price: @lot.estimated_price + 1)
       end
 
       it "response lot" do

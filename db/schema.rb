@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_08_29_140248) do
+ActiveRecord::Schema.define(version: 2018_09_03_091026) do
 
   create_table "bids", force: :cascade do |t|
     t.float "proposed_price"
@@ -36,6 +36,7 @@ ActiveRecord::Schema.define(version: 2018_08_29_140248) do
     t.string "job_id_in_process"
     t.string "job_id_closed"
     t.integer "bid_win"
+    t.integer "user_win_id"
     t.index ["status"], name: "index_lots_on_status"
     t.index ["user_id"], name: "index_lots_on_user_id"
   end

@@ -38,6 +38,7 @@ group :development, :test do
   gem "factory_bot_rails"
   gem "faker"
   gem "simplecov", require: false
+  gem "action-cable-testing"
 end
 
 group :development do

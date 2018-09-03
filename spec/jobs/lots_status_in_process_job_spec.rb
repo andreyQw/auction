@@ -19,7 +19,7 @@ RSpec.describe LotsStatusInProcessJob, type: :job do
 
   it "is run job in correct time" do
     time = Time.now
-    jid = LotsStatusInProcessJob.set(wait_until: time + 10.second).perform_later(@lot.id)
-    expect(jid.scheduled_at).to eq((time + 10.second).to_f)
+    job = LotsStatusInProcessJob.set(wait_until: time + 10.second).perform_later(@lot.id)
+    expect(job.scheduled_at).to eq((time + 10.second).to_f)
   end
 end
