@@ -7,8 +7,7 @@ Rails.application.routes.draw do
 
   resources :lots
   resources :bids, only: [:create]
-  resources :orders, except: [:index]
-
+  resources :orders, except: [:index, :destroy]
 
   require "sidekiq/web"
   mount Sidekiq::Web => "/sidekiq"
