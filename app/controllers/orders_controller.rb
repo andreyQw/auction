@@ -4,8 +4,9 @@ class OrdersController < ApiController
   before_action :authenticate_user!
 
   def create
-    order = Order.create(order_params)
+    order = Order.new(order_params)
     authorize order
+    order.save
     render_resource_or_errors(order)
   end
 

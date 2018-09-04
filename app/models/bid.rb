@@ -20,7 +20,6 @@ class Bid < ApplicationRecord
   belongs_to :user
   belongs_to :lot
 
-
   after_create :change_lot_current_price, :lot_closed, :broadcast_bid
 
   validates :proposed_price, :lot_id,  presence: true
@@ -47,7 +46,7 @@ class Bid < ApplicationRecord
 
 
   def change_lot_current_price
-    lot.update(current_price: proposed_price)
+    lot.update_column("current_price", proposed_price)
   end
 
   def lot_closed
