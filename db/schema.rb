@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_09_03_091026) do
+ActiveRecord::Schema.define(version: 2018_09_05_071450) do
 
   create_table "bids", force: :cascade do |t|
     t.float "proposed_price"
@@ -43,7 +43,7 @@ ActiveRecord::Schema.define(version: 2018_09_03_091026) do
 
   create_table "orders", force: :cascade do |t|
     t.integer "status", default: 0
-    t.string "arrival_type"
+    t.integer "arrival_type", default: 0
     t.text "arrival_location"
     t.integer "lot_id"
     t.datetime "created_at", null: false
