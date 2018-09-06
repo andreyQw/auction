@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: orders
@@ -27,39 +28,42 @@ class Order < ApplicationRecord
 
   validates :arrival_location, :arrival_type, :status, presence: true
 
-  validate :lot_status_must_be_closed
+  validate :lot_status_must_be_closed,  on: :create
 
   validate :check_status_change_for_seller, on: :update, if: :seller?
   validate :customer_can_update_pending_order,  on: :update, if: :customer?
   validate :check_status_change_for_customer, on: :update, if: :customer?
+
+  after_create :send_email_for_seller
+  after_update :send_email_for_customer_lot_sent, :send_email_after_delivered
 
   def lot_status_must_be_closed
     errors.add(:base, "Lot status must be closed") unless lot.closed?
   end
 
   def seller?
-    true if current_user_role == "seller"
+    current_user_role == "seller"
   end
 
   def customer?
-    true if current_user_role == "customer"
+    current_user_role == "customer"
   end
 
   def check_status_change_for_seller
-    unless seller? && changed == ["status"] && status_change == ["pending", "sent"]
+    unless changed == ["status"] && status_change == ["pending", "sent"]
       errors.add(:base, "seller can update only status field and it must be from :pending to :sent")
     end
   end
 
   def check_status_change_for_customer
-    if customer? && status_change != ["sent", "delivered"]
-      errors.add(:status, "customer can update status field only from :sent to :delivered")
+    if changed == ["status"] && status_change != ["sent", "delivered"]
+      errors.add(:status, "customer can update status only from :sent to :delivered")
     end
   end
 
   def customer_can_update_pending_order
-    unless customer? && status == "pending"
-      errors.add(:status, "customer can update order if status :pending")
+    if status == "pending" && changed.include?("status") || status != "pending" && (changed.include?("arrival_type") || changed.include?("arrival_location"))
+      errors.add(:status, "customer can update pending order except :status")
     end
   end
 
@@ -68,6 +72,23 @@ class Order < ApplicationRecord
       "customer"
     elsif lot.user_id == current_user_id
       "seller"
+    end
+  end
+
+  def send_email_for_seller
+    UserMailer.email_for_seller_order_was_created self
+  end
+
+  def send_email_for_customer_lot_sent
+    if status == "sent"
+      UserMailer.email_for_customer_lot_was_sent self
+    end
+  end
+
+  def send_email_after_delivered
+    if status == "delivered"
+      UserMailer.email_after_delivered_to_seller self
+      UserMailer.email_after_delivered_to_customer self
     end
   end
 end

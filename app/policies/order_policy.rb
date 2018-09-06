@@ -2,7 +2,7 @@
 
 class OrderPolicy < ApplicationPolicy
   def create?
-    @user.id == record.lot.user_win_id
+    customer?
   end
 
   def show?
@@ -15,7 +15,14 @@ class OrderPolicy < ApplicationPolicy
 
   private
     def has_access_to_order?
-      @user.id == record.lot.user_id || @user.id == record.lot.user_win_id
+      seller? || customer?
     end
 
+    def customer?
+      @user.id == record.lot.user_win_id
+    end
+
+    def seller?
+      @user.id == record.lot.user_id
+    end
 end

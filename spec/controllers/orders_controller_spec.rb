@@ -6,10 +6,10 @@ RSpec.describe OrdersController, type: :controller do
 
   describe "POST /orders" do
     login(:user)
-    let(:user2) { create(:user) }
+    let(:user_customer) { create(:user) }
     let(:lot) { create(:lot, user_id: @user.id, status: :in_process, current_price: 10.00, estimated_price: 15.00) }
     before(:each) do
-      @bid = create(:bid, proposed_price: 20.00, lot_id: lot.id, user_id: user2.id)
+      @bid = create(:bid, proposed_price: 20.00, lot_id: lot.id, user_id: user_customer.id)
     end
 
     subject { post :create, params: attributes_for(:order, lot_id: lot.id) }
@@ -21,11 +21,12 @@ RSpec.describe OrdersController, type: :controller do
 
     context "when user winner" do
       before(:each) do
-        login_by_user(user2)
+        login_by_user(user_customer)
       end
       it "should create order" do
         subject
-        expect(json_parse_response_body[:resource][:lot_id]).to eq(lot.id)
+        keys = [:id, :lot_id, :status, :arrival_type, :arrival_location]
+        expect(json_parse_response_body[:resource].keys).to eq(keys)
       end
     end
   end
@@ -44,8 +45,7 @@ RSpec.describe OrdersController, type: :controller do
       subject { put :update, params: { id: @lot.id, status: "sent" } }
       it "should update" do
         subject
-        keys = [:id, :lot_id, :status, :arrival_type, :arrival_location]
-        expect(json_parse_response_body[:resource].keys).to eq(keys)
+        expect(json_parse_response_body[:resource][:status]).to eq("sent")
       end
     end
 
@@ -66,29 +66,40 @@ RSpec.describe OrdersController, type: :controller do
     end
 
 
-    context "customer try update with :sent status" do
+    context "Customer stack/" do
       before(:each) do
         login_by_user(@user_customer)
       end
-      subject { put :update, params: { id: @lot.id, status: "sent" } }
-      it "should update" do
-        subject
-        expect(json_parse_response_body[:errors][:status]).to include("customer can update status field only from :sent to :delivered")
-        # expect { subject } .to change { @lot.reload.title } .to("New title")
-      end
-    end
 
-    context "customer try update with :sent status" do
-      before(:each) do
-        login_by_user(@user_customer)
-        @order.status
+      context "customer try update order with :sent status" do
+        subject { put :update, params: { id: @order.id, status: "sent" } }
+        it "should update" do
+          subject
+          expect(json_parse_response_body[:errors][:status]).to include("customer can update status only from :sent to :delivered")
+        end
       end
-      subject { put :update, params: { id: @lot.id, status: "sent" } }
-      it "should update" do
-        subject
-        expect(json_parse_response_body[:errors][:status]).to include("customer can update status field only from :sent to :delivered")
-        # expect { subject } .to change { @lot.reload.title } .to("New title")
+
+      context "customer try update order with :arrival_type" do
+        subject { put :update, params: { id: @order.id, arrival_type: "dhl_express" } }
+        it "should update" do
+          subject
+          expect(response).to be_successful
+          expect(json_parse_response_body[:resource][:arrival_type]).to eq("dhl_express")
+        end
       end
+
+      context "customer try update order" do
+        before(:each) do
+          @order.status
+        end
+        subject { put :update, params: { id: @lot.id, status: "sent" } }
+        it "should update" do
+          subject
+          expect(json_parse_response_body[:errors][:status]).to include("customer can update status only from :sent to :delivered")
+          # expect { subject } .to change { @lot.reload.title } .to("New title")
+        end
+      end
+
     end
 
   end

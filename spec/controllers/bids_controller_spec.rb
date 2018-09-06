@@ -18,16 +18,20 @@ RSpec.describe BidsController, type: :controller do
     end
 
     subject do
-      post :create, params: attributes_for(:bid, user_id: @user2.id, lot_id: @lot.id, proposed_price: @proposed_price)
-    end
-
-    it "should broadcast bid send to lot chanel" do
-      expect { subject }
-          .to have_broadcasted_to("bids_for_lot_#{@lot.id}")
-                  .with(a_hash_including(user_name_alias: user_name_alias(@user2.id, @lot.id)))
+      post :create, params: attributes_for(:bid, lot_id: @lot.id, proposed_price: @proposed_price)
     end
 
     context "create bid_win" do
+      before(:each) do
+        login_by_user @user2
+      end
+
+      it "should broadcast bid send to lot chanel" do
+        expect { subject }
+            .to have_broadcasted_to("bids_for_lot_#{@lot.id}")
+                    .with(a_hash_including(user_name_alias: user_name_alias(@user2.id, @lot.id)))
+      end
+
       it "response should be with set lot.bid_win" do
         subject
         expect(json_parse_response_body[:resource][:id]).to eq(@lot.reload.bid_win)
@@ -42,16 +46,9 @@ RSpec.describe BidsController, type: :controller do
       end
     end
 
-    context "create bid 'Customer xxx'" do
-      it "response with with :user_name_alias 'Customer xxx'" do
-        subject
-        expect(json_parse_response_body[:resource][:user_name_alias]).to eq(user_name_alias(@user2.id, @lot.id))
-      end
-    end
-
     context "create bid 'You'" do
       subject do
-        post :create, params: attributes_for(:bid, user_id: @user.id, lot_id: @lot2.id, proposed_price: @proposed_price)
+        post :create, params: attributes_for(:bid, lot_id: @lot2.id, proposed_price: @proposed_price)
       end
       it "response with :user_name_alias 'You'" do
         subject
@@ -60,6 +57,9 @@ RSpec.describe BidsController, type: :controller do
     end
 
     context "create bid valid" do
+      before(:each) do
+        login_by_user @user2
+      end
       it "response for create should be success and change lot.current_price" do
         expect { subject }.to change { @lot.reload.current_price }.from(@lot.current_price).to(@proposed_price)
       end
