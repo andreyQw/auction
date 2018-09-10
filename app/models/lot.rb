@@ -29,16 +29,16 @@
 
 class Lot < ApplicationRecord
   belongs_to :user
+  belongs_to :winner, class_name: "User", foreign_key: "user_win_id", required: false
   has_many :bids
   has_one :order
 
   after_create :push_job_id_to_lot
   after_update :update_lot_jobs, :send_mail_after_closed
 
-  scope :my_lots_all, lambda { |current_user_id| left_joins(:bids).where("lots.user_id = :user_id OR bids.user_id = :user_id", user_id: current_user_id).distinct }
-  scope :my_lots_created, lambda { |current_user_id| where(user_id: current_user_id) }
-  scope :my_lots_participation, lambda { |current_user_id| joins(:bids).where("bids.user_id = #{current_user_id}").distinct }
-  scope :lots_in_process, -> { where(status: "in_process") }
+  scope :my_lots_all, -> (current_user_id) { left_joins(:bids).where("lots.user_id = :user_id OR bids.user_id = :user_id", user_id: current_user_id).distinct }
+  scope :my_lots_created, -> (current_user_id) { where(user_id: current_user_id) }
+  scope :my_lots_participation, -> (current_user_id) { joins(:bids).where("bids.user_id = :user_id", user_id: current_user_id).distinct }
 
   enum status: [ :pending, :in_process, :closed ]
 

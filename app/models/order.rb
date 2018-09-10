@@ -62,9 +62,17 @@ class Order < ApplicationRecord
   end
 
   def customer_can_update_pending_order
-    if status == "pending" && changed.include?("status") || status != "pending" && (changed.include?("arrival_type") || changed.include?("arrival_location"))
+    if case_for_pending_status? || case_for_not_pending_status?
       errors.add(:status, "customer can update pending order except :status")
     end
+  end
+
+  def case_for_pending_status?
+    status == "pending" && changed.include?("status")
+  end
+
+  def case_for_not_pending_status?
+    status != "pending" && (changed.include?("arrival_type") || changed.include?("arrival_location"))
   end
 
   def set_current_user_role(current_user_id)

@@ -40,7 +40,7 @@ class UserMailer < ApplicationMailer
 
   def email_after_delivered_to_customer(order)
     @lot = order.lot
-    @customer = User.find(@lot.user_win_id)
+    @customer = @lot.winner
     mail(to: @customer.email, subject: "email_after_delivered", template_name: "email_after_delivered")
   end
 end
