@@ -54,4 +54,9 @@ RSpec.describe Lot, type: :model do
     expect(lot.errors.messages).to eq lot_end_time: ["Lot END time can't be less than lot START time"]
   end
 
+  it "should save image" do
+    lot = create(:lot, user_id: @user1.id)
+    expect(lot.image.to_s).to eq("/uploads/test/lot/image/#{lot.id}/no_image.gif")
+    expect(File.file?("#{Rails.root}/public" + lot.image.to_s)).to be true
+  end
 end

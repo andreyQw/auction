@@ -31,7 +31,7 @@ FactoryBot.define do
   factory :lot do
     user_id 1
     title { Faker::Device.model_name }
-    image "img"
+    image { Rack::Test::UploadedFile.new(Rails.root.join("spec/support/no_image.gif")) }
     description { Faker::Device.manufacturer }
     status :pending
     current_price { rand(100..1000).to_f }

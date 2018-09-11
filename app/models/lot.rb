@@ -36,11 +36,15 @@ class Lot < ApplicationRecord
   after_create :push_job_id_to_lot
   after_update :update_lot_jobs, :send_mail_after_closed
 
+  mount_uploader :image, LotImageUploader
+
   scope :my_lots_all, -> (current_user_id) { left_joins(:bids).where("lots.user_id = :user_id OR bids.user_id = :user_id", user_id: current_user_id).distinct }
   scope :my_lots_created, -> (current_user_id) { where(user_id: current_user_id) }
   scope :my_lots_participation, -> (current_user_id) { joins(:bids).where("bids.user_id = :user_id", user_id: current_user_id).distinct }
 
   enum status: [ :pending, :in_process, :closed ]
+
+  validates :image, file_size: { less_than: 1.megabytes }
 
   validates :title, :current_price, :estimated_price, :lot_start_time, :lot_end_time,  presence: true
 
