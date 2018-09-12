@@ -80,6 +80,7 @@ class Lot < ApplicationRecord
     if job_closed != nil
       job_closed.delete
     end
+    # update_columns(job_id_in_process: nil, job_id_closed: nil)
     if bid_win == nil
       jobs_id = add_lot_jobs
       update_columns(job_id_in_process: jobs_id[:job_id_in_process], job_id_closed: jobs_id[:job_id_closed])
