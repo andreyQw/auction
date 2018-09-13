@@ -28,17 +28,46 @@
 #
 
 FactoryBot.define do
+  time_now = Time.zone.now
   factory :lot do
-    user_id 1
+    user
     title { Faker::Device.model_name }
     image { Rack::Test::UploadedFile.new(Rails.root.join("spec/support/no_image.gif")) }
     description { Faker::Device.manufacturer }
-    status :pending
-    current_price { rand(100..1000).to_f }
-    estimated_price  { rand(1001..2000).to_f }
-    lot_start_time DateTime.now + 1.hour
-    lot_end_time DateTime.now + 5.hour
-    created_at DateTime.now
-    updated_at DateTime.now
+    status "pending"
+    current_price 10.00
+    estimated_price 20.00
+    lot_start_time time_now + 1.hour
+    lot_end_time time_now + 2.hour
+    created_at time_now
+    updated_at time_now
+  end
+
+  factory :lot_in_process, class: Lot do
+    user
+    title { Faker::Device.model_name }
+    image { Rack::Test::UploadedFile.new(Rails.root.join("spec/support/no_image.gif")) }
+    description { Faker::Device.manufacturer }
+    status "in_process"
+    current_price 10.00
+    estimated_price 20.00
+    lot_start_time time_now + 1.hour
+    lot_end_time time_now + 2.hour
+    created_at time_now
+    updated_at time_now
+  end
+
+  factory :lot_closed, class: Lot do
+    user
+    title { Faker::Device.model_name }
+    image { Rack::Test::UploadedFile.new(Rails.root.join("spec/support/no_image.gif")) }
+    description { Faker::Device.manufacturer }
+    status "closed"
+    current_price 10.00
+    estimated_price 20.00
+    lot_start_time time_now + 1.hour
+    lot_end_time time_now + 2.hour
+    created_at time_now
+    updated_at time_now
   end
 end

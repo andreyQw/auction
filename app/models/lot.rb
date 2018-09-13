@@ -35,6 +35,7 @@ class Lot < ApplicationRecord
 
   after_create :push_job_id_to_lot
   after_update :update_lot_jobs, :send_mail_after_closed
+  after_destroy :delete_jobs
 
   mount_uploader :image, LotImageUploader
 
@@ -92,6 +93,11 @@ class Lot < ApplicationRecord
     job_closed = LotsStatusClosedJob.set(wait_until: lot_end_time).perform_later("lot_id:#{id}")
 
     { job_id_in_process: job_in_process.provider_job_id, job_id_closed: job_closed.provider_job_id }
+  end
+
+  def delete_jobs
+    Sidekiq::ScheduledSet.new.find_job(job_id_in_process).delete
+    Sidekiq::ScheduledSet.new.find_job(job_id_closed).delete
   end
 
   def send_mail_after_closed
