@@ -18,10 +18,9 @@
 
 
 require "rails_helper"
+require "sidekiq/testing"
 
 RSpec.describe Bid, type: :model do
-  include ActiveJob::TestHelper
-  # after { clear_enqueued_jobs }
 
   let(:seller) { create(:user) }
   let(:customer) { create(:user) }

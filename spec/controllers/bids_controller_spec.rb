@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "rails_helper"
+require "sidekiq/testing"
 
 RSpec.describe BidsController, type: :controller do
 
@@ -13,14 +14,6 @@ RSpec.describe BidsController, type: :controller do
     let(:customer2) { create(:user) }
     let(:lot1) { create(:lot_in_process, user_id: @user.id, current_price: 10.0, estimated_price: 20.0) }
     let(:lot2) { create(:lot_in_process, user_id: customer.id, current_price: 10.0, estimated_price: 20.0) }
-
-    # before(:each) do
-    #   time = Time.zone.now
-    #   @user2 = create(:user)
-    #   @lot = create(:lot, user_id: @user.id, status: :in_process, lot_start_time: time + 60.second, lot_end_time: time + 120.second, current_price: 10.00, estimated_price: 15.00)
-    #   @lot2 = create(:lot, user_id: @user2.id, status: :in_process, lot_start_time: time + 60.second, lot_end_time: time + 120.second, current_price: 10.00, estimated_price: 15.00)
-    #   @proposed_price = @lot.current_price + 10
-    # end
 
     subject do
       # not win bid

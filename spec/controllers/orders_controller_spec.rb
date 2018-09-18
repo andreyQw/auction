@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "rails_helper"
+require "sidekiq/testing"
 
 RSpec.describe OrdersController, type: :controller do
 
@@ -9,7 +10,7 @@ RSpec.describe OrdersController, type: :controller do
     let(:user_customer) { create(:user) }
     let(:lot) { create(:lot, user_id: @user.id, status: :in_process, current_price: 10.00, estimated_price: 15.00) }
     before(:each) do
-      @bid = create(:bid, proposed_price: 20.00, lot_id: lot.id, user_id: user_customer.id)
+      @bid = create(:bid, proposed_price: lot.estimated_price + 1, lot_id: lot.id, user_id: user_customer.id)
     end
 
     subject { post :create, params: attributes_for(:order, lot_id: lot.id) }

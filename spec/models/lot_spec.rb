@@ -61,16 +61,6 @@ RSpec.describe Lot, type: :model do
     expect(File.file?("#{Rails.root}/public" + lot.image.to_s)).to be true
   end
 
-  it "should add_lot_jobs" do
-    Sidekiq::Testing.disable!
-    # Sidekiq::Testing.fake!
-    lot = lot_pending
-    expect(Sidekiq::ScheduledSet.new.size).to eq 2
-    expect(Sidekiq::ScheduledSet.new.find_job(lot.job_id_in_process)).to be_truthy
-    expect(Sidekiq::ScheduledSet.new.find_job(lot.job_id_closed)).to be_truthy
-    Sidekiq::ScheduledSet.new.clear
-  end
-
   it "should push_job_id_to_lot" do
     lot = build(:lot, user_id: seller.id)
     expect(lot.add_lot_jobs).to include(:job_id_in_process, :job_id_closed)
@@ -78,9 +68,18 @@ RSpec.describe Lot, type: :model do
 
   it "should delete_jobs" do
     Sidekiq::Testing.disable!
-    lot = create(:lot, user_id: seller.id)
+    lot = lot_pending
     lot.delete_jobs
     expect(Sidekiq::ScheduledSet.new.size).to eq 0
   end
 
+  it "should add_lot_jobs" do
+    Sidekiq::Testing.disable!
+    # Sidekiq::Testing.fake!
+    lot = lot_pending
+    expect(Sidekiq::ScheduledSet.new.size).to eq 2
+    expect(Sidekiq::ScheduledSet.new.find_job(lot.job_id_in_process)).to be_truthy
+    expect(Sidekiq::ScheduledSet.new.find_job(lot.job_id_closed)).to be_truthy
+    lot.delete_jobs
+  end
 end

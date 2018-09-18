@@ -6,8 +6,6 @@ require "sidekiq/testing"
 RSpec.describe LotsController, type: :controller do
 
   describe "GET /lots" do
-    include ActiveJob::TestHelper
-    after { clear_enqueued_jobs }
 
     context "not authenticated" do
       it "error for index - You need to sign_in/sign_up" do
@@ -129,7 +127,6 @@ RSpec.describe LotsController, type: :controller do
 
   describe "POST /lots" do
 
-    include ActiveJob::TestHelper
 
     login(:user)
 
@@ -152,7 +149,6 @@ RSpec.describe LotsController, type: :controller do
 
   describe "GET /lots/:id" do
 
-    include ActiveJob::TestHelper
 
     login(:user)
     let(:user2) { create(:user) }
@@ -227,7 +223,6 @@ RSpec.describe LotsController, type: :controller do
 
   describe "PUT /lots/:id" do
 
-    include ActiveJob::TestHelper
 
     login(:user)
     let(:user2) { create(:user) }
@@ -238,7 +233,7 @@ RSpec.describe LotsController, type: :controller do
 
     context "update with valid user" do
       it "should update lot, with :pending status" do
-        expect { put :update, params: { id: lot_pending.id, title: "New title" } }.to change{ lot_pending.reload.title }.to("New title")
+        expect { put :update, params: { id: lot_pending.id, title: "New title" } }.to change { lot_pending.reload.title }.to("New title")
       end
 
       it "should not update lot, with :in_process status" do
@@ -312,7 +307,6 @@ RSpec.describe LotsController, type: :controller do
     end
 
     context "delete with not valid user" do
-      include ActiveJob::TestHelper
       login(:user)
       before(:each) do
         lot_pending # lot with @user owner

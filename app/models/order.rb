@@ -35,7 +35,9 @@ class Order < ApplicationRecord
   validate :check_status_change_for_customer, on: :update, if: :customer?
 
   after_create :send_email_for_seller
-  after_update :send_email_for_customer_lot_sent, :send_email_after_delivered
+
+  after_update :send_email_for_customer_lot_sent, if: :sent?
+  after_update :send_email_after_delivered, if: :delivered?
 
   def lot_status_must_be_closed
     errors.add(:base, "Lot status must be closed") unless lot.closed?
@@ -88,15 +90,11 @@ class Order < ApplicationRecord
   end
 
   def send_email_for_customer_lot_sent
-    if status == "sent"
-      UserMailer.email_for_customer_lot_was_sent self
-    end
+    UserMailer.email_for_customer_lot_was_sent self
   end
 
   def send_email_after_delivered
-    if status == "delivered"
-      UserMailer.email_after_delivered_to_seller self
-      UserMailer.email_after_delivered_to_customer self
-    end
+    UserMailer.email_after_delivered_to_seller self
+    UserMailer.email_after_delivered_to_customer self
   end
 end
