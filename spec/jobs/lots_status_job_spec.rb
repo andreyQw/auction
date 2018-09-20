@@ -4,7 +4,6 @@ require "rails_helper"
 
 RSpec.describe LotsStatusInProcessJob, type: :job do
   include ActiveJob::TestHelper
-  ActiveJob::Base.queue_adapter = :test
 
   subject(:job) { described_class.perform_later(@lot.id) }
   before(:each) do

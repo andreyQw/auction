@@ -23,6 +23,9 @@ require "rails_helper"
 require "sidekiq/testing"
 
 RSpec.describe Order, type: :model do
+  after(:all) do
+    Sidekiq::ScheduledSet.new.clear
+  end
 
   let(:user_seller) { create(:user) }
   let(:user_customer) { create(:user) }

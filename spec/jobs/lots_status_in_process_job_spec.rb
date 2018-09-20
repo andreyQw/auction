@@ -4,7 +4,6 @@ require "rails_helper"
 
 RSpec.describe LotsStatusInProcessJob, type: :job do
   include ActiveJob::TestHelper
-  ActiveJob::Base.queue_adapter = :test
 
   let(:seller) { create(:user) }
   let(:lot) { create(:lot, user_id: seller.id) }

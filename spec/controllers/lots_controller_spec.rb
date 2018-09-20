@@ -8,13 +8,14 @@ RSpec.describe LotsController, type: :controller do
   describe "GET /lots" do
 
     context "not authenticated" do
+
       it "error for index - You need to sign_in/sign_up" do
         get :index
         expect(response.status).to eq(401)
         expect(json_parse_response_body[:errors]).to include("You need to sign in or sign up before continuing.")
       end
 
-      it "error for create - You need to sign_in/sign_up" do
+      it "error for create" do
         post :create, params: attributes_for(:lot)
         expect(response.status).to eq(401)
       end
@@ -127,7 +128,6 @@ RSpec.describe LotsController, type: :controller do
 
   describe "POST /lots" do
 
-
     login(:user)
 
     time = Time.zone.now
@@ -148,7 +148,6 @@ RSpec.describe LotsController, type: :controller do
   end
 
   describe "GET /lots/:id" do
-
 
     login(:user)
     let(:user2) { create(:user) }
@@ -223,7 +222,6 @@ RSpec.describe LotsController, type: :controller do
 
   describe "PUT /lots/:id" do
 
-
     login(:user)
     let(:user2) { create(:user) }
 
@@ -292,14 +290,12 @@ RSpec.describe LotsController, type: :controller do
       end
 
       it "should not delete (status: :in_process)" do
-        Sidekiq::Testing.fake!
         delete :destroy, params: { id: lot_in_process.id }
         expect(@user.lots.count).to eq 1
         expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
       end
 
       it "should not delete (status: :closed)" do
-        Sidekiq::Testing.fake!
         delete :destroy, params: { id: lot_closed.id }
         expect(@user.lots.count).to eq 1
         expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")

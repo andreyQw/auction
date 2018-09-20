@@ -75,14 +75,10 @@ class Lot < ApplicationRecord
     job_in_process = Sidekiq::ScheduledSet.new.find_job(job_id_in_process)
     job_closed = Sidekiq::ScheduledSet.new.find_job(job_id_closed)
 
-    if job_in_process != nil
-      job_in_process.delete
-    end
-    if job_closed != nil
-      job_closed.delete
-    end
-    # update_columns(job_id_in_process: nil, job_id_closed: nil)
-    if bid_win == nil
+    job_in_process.delete unless job_in_process.nil?
+    job_closed.delete unless job_closed.nil?
+
+    if bid_win.nil?
       jobs_id = add_lot_jobs
       update_columns(job_id_in_process: jobs_id[:job_id_in_process], job_id_closed: jobs_id[:job_id_closed])
     end
@@ -96,12 +92,12 @@ class Lot < ApplicationRecord
   end
 
   def delete_jobs
-    Sidekiq::ScheduledSet.new.find_job(job_id_in_process).delete
-    Sidekiq::ScheduledSet.new.find_job(job_id_closed).delete
+    Sidekiq::ScheduledSet.new.find_job(job_id_in_process).delete if job_id_in_process?
+    Sidekiq::ScheduledSet.new.find_job(job_id_closed).delete if job_id_closed?
   end
 
   def send_mail_after_closed
-    if status == "closed"
+    if closed?
       UserMailer.email_for_seller_lot_closed self
       if bid_win
         UserMailer.email_for_lot_winner self
