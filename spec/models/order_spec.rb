@@ -27,94 +27,32 @@ RSpec.describe Order, type: :model do
     Sidekiq::ScheduledSet.new.clear
   end
 
-  let(:user_seller) { create(:user) }
-  let(:user_customer) { create(:user) }
-  let(:lot) { create(:lot, status: "closed", user_id: user_seller.id, bid_win: 1, user_win_id: user_customer.id) }
+  let(:seller) { create(:user) }
 
-  let(:order_pending) { create(:order, lot_id: lot.id) }
-  let(:order_sent) { create(:order, lot_id: lot.id, status: :sent) }
+  let(:lot_pending) { create(:lot, user_id: seller.id) }
+  let(:lot_in_process) { create(:lot_in_process, user_id: seller.id, current_price: 10.0) }
+  let(:lot_closed) { create(:lot_closed, user_id: seller.id) }
 
-  context "create order" do
-    it "should be valid" do
-      expect(order_pending).to be_valid
-    end
+  let(:order_pending) { create(:order, lot_id: lot_closed.id) }
 
-    it "should set current_user_role: seller" do
-      order_pending.instance_variable_set "@current_user_role", order_pending.set_current_user_role(user_seller.id)
-      expect(order_pending.current_user_role).to eq("seller")
-    end
+  context "Validation" do
+    context "lot_status_must_be_closed" do
 
-    it "should set current_user_role: customer" do
-      order_pending.instance_variable_set "@current_user_role", order_pending.set_current_user_role(user_customer.id)
-      expect(order_pending.current_user_role).to eq("customer")
-    end
-  end
-
-  context "update order" do
-    context "Seller stack" do
-
-      it "seller can update" do
-        order_pending.instance_variable_set "@current_user_role", order_pending.set_current_user_role(user_seller.id)
-        order_pending.update(status: :sent)
-        expect(order_pending.reload.status).to eq("sent")
+      it "should be valid" do
+        order = build(:order, lot_id: lot_closed.id)
+        expect(order).to be_valid
       end
 
-      it "seller can update only status field" do
-        order_pending.instance_variable_set "@current_user_role", order_pending.set_current_user_role(user_seller.id)
-        order_pending.update(status: "sent", arrival_type: :dhl_express)
-        expect(order_pending.errors[:base]).to eq (["seller can update only status field and it must be from :pending to :sent"])
+      it "should not be valid: lot.status = in_process" do
+        order = build(:order, lot_id: lot_in_process.id)
+        expect(order).to_not be_valid
+        expect(order.errors.messages[:base]).to eq(["Lot status must be closed"])
       end
 
-      it "seller can't update status on: delivered" do
-        order_pending.instance_variable_set "@current_user_role", order_pending.set_current_user_role(user_seller.id)
-        order_pending.update(status: :delivered)
-        expect(order_pending.errors[:base]).to eq (["seller can update only status field and it must be from :pending to :sent"])
-      end
-    end
-
-    context "Customer stack" do
-      context "for order with :pending status" do
-
-        it "customer can update :arrival_type" do
-          order_pending.instance_variable_set "@current_user_role", order_pending.set_current_user_role(user_customer.id)
-          order_pending.update(arrival_type: :dhl_express)
-          expect(order_pending.reload.arrival_type).to eq("dhl_express")
-        end
-
-        it "customer can't update status from :pending to :sent" do
-          order_pending.instance_variable_set "@current_user_role", order_pending.set_current_user_role(user_customer.id)
-          order_pending.update(status: :sent)
-          expect(order_pending.errors[:status]).to include("customer can update status only from :sent to :delivered")
-        end
-
-        it "customer can't update status from :pending to :delivered" do
-          order_pending.instance_variable_set "@current_user_role", order_pending.set_current_user_role(user_customer.id)
-          order_pending.update(status: :delivered)
-          expect(order_pending.errors[:status]).to include("customer can update status only from :sent to :delivered")
-        end
-
-      end
-
-      context "for order with :sent status" do
-        it "customer can update status from :sent to :delivered" do
-          order_sent.instance_variable_set "@current_user_role", order_sent.set_current_user_role(user_customer.id)
-          order_sent.update(status: :delivered)
-          expect(order_sent).to be_valid
-        end
-
-        it "customer can't update status from :sent to :pending" do
-          order_sent.instance_variable_set "@current_user_role", order_pending.set_current_user_role(user_customer.id)
-          order_sent.update(status: :pending)
-          expect(order_sent.errors[:status]).to include("customer can update status only from :sent to :delivered")
-        end
-
-        it "customer can't update :arrival_type" do
-          order_sent.instance_variable_set "@current_user_role", order_sent.set_current_user_role(user_customer.id)
-          order_sent.update(arrival_type: :dhl_express)
-          expect(order_sent.errors[:status]).to include("customer can update pending order except :status")
-        end
+      it "should not be valid: lot.status = pending" do
+        order = build(:order, lot_id: lot_pending.id)
+        expect(order).to_not be_valid
       end
     end
-
   end
 end

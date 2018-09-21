@@ -51,7 +51,7 @@ RSpec.describe Bid, type: :model do
       let(:lot_pending) { create(:lot, user_id: seller.id) }
       let(:lot_closed) { create(:lot_closed, user_id: seller.id) }
 
-      it "should be valid" do
+      it "should be valid, status :in_process" do
         bid = build(:bid, lot_id: lot_in_process.id, user_id: customer.id, proposed_price: lot_in_process.current_price + 1)
         expect(bid).to be_valid
       end
@@ -76,7 +76,7 @@ RSpec.describe Bid, type: :model do
         expect(bid).to be_valid
       end
 
-      it "should not be valid, owner can't create bid for his lot" do
+      it "should not be valid" do
         bid = build(:bid, lot_id: lot_in_process.id, user_id: seller.id, proposed_price: lot_in_process.current_price + 1)
         expect(bid).to_not be_valid
         expect(bid.errors.messages).to eq user: ["Lot owner can't create bid for his lot"]

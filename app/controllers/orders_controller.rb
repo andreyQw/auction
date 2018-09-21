@@ -18,10 +18,10 @@ class OrdersController < ApiController
 
   def update
     order = Order.find(params[:id])
-    order.instance_variable_set "@current_user_role", order.set_current_user_role(current_user.id)
-    authorize order
+    order.assign_attributes(order_params)
 
-    order.update_attributes(order_params)
+    authorize order
+    order.save
     render_resource_or_errors order
   end
 
