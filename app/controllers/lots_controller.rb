@@ -12,7 +12,7 @@ class LotsController < ApiController
     elsif filter == "participation"
       return render_resources Lot.my_lots_participation(current_user.id)
     end
-    render_resources Lot.lots_in_process
+    render_resources Lot.in_process
   end
 
   def create

@@ -19,6 +19,7 @@
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
 #  user_id           :integer
+#  user_win_id       :integer
 #
 # Indexes
 #
@@ -28,18 +29,23 @@
 
 class Lot < ApplicationRecord
   belongs_to :user
+  belongs_to :winner, class_name: "User", foreign_key: "user_win_id", required: false
   has_many :bids
   has_one :order
 
   after_create :push_job_id_to_lot
   after_update :update_lot_jobs, :send_mail_after_closed
+  after_destroy :delete_jobs
 
-  scope :my_lots_all, lambda { |current_user_id| left_joins(:bids).where("lots.user_id = :user_id OR bids.user_id = :user_id", user_id: current_user_id).distinct }
-  scope :my_lots_created, lambda { |current_user_id| where(user_id: current_user_id) }
-  scope :my_lots_participation, lambda { |current_user_id| joins(:bids).where("bids.user_id = #{current_user_id}").distinct }
-  scope :lots_in_process, -> { where(status: "in_process") }
+  mount_uploader :image, LotImageUploader
+
+  scope :my_lots_all, -> (current_user_id) { left_joins(:bids).where("lots.user_id = :user_id OR bids.user_id = :user_id", user_id: current_user_id).distinct }
+  scope :my_lots_created, -> (current_user_id) { where(user_id: current_user_id) }
+  scope :my_lots_participation, -> (current_user_id) { joins(:bids).where("bids.user_id = :user_id", user_id: current_user_id).distinct }
 
   enum status: [ :pending, :in_process, :closed ]
+
+  validates :image, file_size: { less_than: 1.megabytes }
 
   validates :title, :current_price, :estimated_price, :lot_start_time, :lot_end_time,  presence: true
 
@@ -69,13 +75,10 @@ class Lot < ApplicationRecord
     job_in_process = Sidekiq::ScheduledSet.new.find_job(job_id_in_process)
     job_closed = Sidekiq::ScheduledSet.new.find_job(job_id_closed)
 
-    if job_in_process != nil
-      job_in_process.delete
-    end
-    if job_closed != nil
-      job_closed.delete
-    end
-    if bid_win == nil
+    job_in_process.delete unless job_in_process.nil?
+    job_closed.delete unless job_closed.nil?
+
+    if bid_win.nil?
       jobs_id = add_lot_jobs
       update_columns(job_id_in_process: jobs_id[:job_id_in_process], job_id_closed: jobs_id[:job_id_closed])
     end
@@ -88,8 +91,13 @@ class Lot < ApplicationRecord
     { job_id_in_process: job_in_process.provider_job_id, job_id_closed: job_closed.provider_job_id }
   end
 
+  def delete_jobs
+    Sidekiq::ScheduledSet.new.find_job(job_id_in_process).delete if job_id_in_process?
+    Sidekiq::ScheduledSet.new.find_job(job_id_closed).delete if job_id_closed?
+  end
+
   def send_mail_after_closed
-    if status == "closed"
+    if closed?
       UserMailer.email_for_seller_lot_closed self
       if bid_win
         UserMailer.email_for_lot_winner self

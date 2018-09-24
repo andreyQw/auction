@@ -39,7 +39,8 @@
 #
 
 FactoryBot.define do
-  factory :user do
+
+  factory :user, aliases: [:seller, :customer] do
     first_name { Faker::Name.first_name }
     last_name  { Faker::Name.last_name }
     sequence(:email) { |n| n.to_s + Faker::Internet.free_email }
@@ -48,5 +49,38 @@ FactoryBot.define do
     phone  { Faker::PhoneNumber.cell_phone }
     birthday { DateTime.now - rand(21..55).years }
     confirmed_at { DateTime.current }
+
+
+    factory :user_with_lots_pending do
+      transient do
+        lots_count { 10 }
+      end
+
+      after(:create) do |user, evaluator|
+        create_list(:lot, evaluator.lots_count, user: user)
+      end
+    end
+
+    factory :user_with_lots_in_process do
+      transient do
+        lots_count { 10 }
+      end
+
+      after(:create) do |user, evaluator|
+        create_list(:lot_in_process, evaluator.lots_count, user: user)
+      end
+    end
+
+    factory :user_with_lots_closed do
+      transient do
+        lots_count { 10 }
+      end
+
+      after(:create) do |user, evaluator|
+        create_list(:lot_closed, evaluator.lots_count, user: user)
+      end
+    end
+
   end
+
 end

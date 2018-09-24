@@ -1,68 +1,81 @@
 # frozen_string_literal: true
 
 require "rails_helper"
-include ActionController::RespondWith
+require "sidekiq/testing"
 
 RSpec.describe BidsController, type: :controller do
 
   #
   describe "POST /bids" do
-    login(:user)
 
-    before(:each) do
-      time = DateTime.now
-      @user2 = create(:user)
-      @lot = create(:lot, user_id: @user.id, status: :in_process, lot_start_time: time + 60.second, lot_end_time: time + 120.second, current_price: 10.00, estimated_price: 15.00)
-      @lot2 = create(:lot, user_id: @user2.id, status: :in_process, lot_start_time: time + 60.second, lot_end_time: time + 120.second, current_price: 10.00, estimated_price: 15.00)
-      @proposed_price = @lot.current_price + 10
-    end
+    context "Not authorized user" do
+      let!(:seller) { create(:user) }
+      let!(:lot) { create(:lot_in_process, user_id: seller.id, current_price: 10.0, estimated_price: 20.0) }
 
-    subject do
-      post :create, params: attributes_for(:bid, user_id: @user2.id, lot_id: @lot.id, proposed_price: @proposed_price)
-    end
-
-    context "create bid_win" do
-      it "response should be with set lot.bid_win" do
-        subject
-        expect(json_parse_response_body[:resource][:id]).to eq(@lot.reload.bid_win)
+      it "should not create bid" do
+        post :create, params: attributes_for(:bid, lot_id: lot.id, proposed_price: lot.current_price + 1)
+        expect(json_parse_response_body[:errors]).to include("You need to sign in or sign up before continuing.")
       end
     end
 
-    context "create not bid_win" do
-      it "response should create bid, end not add to @lot.bid_win" do
-        @proposed_price = rand(@lot.current_price...@lot.estimated_price)
-        subject
-        expect(@lot.reload.bid_win).to eq(nil)
-      end
-    end
+    context "Authorized user" do
+      login(:user)
+      let(:customer) { create(:user) }
 
-    context "create bid 'Customer xxx'" do
-      it "response with with :user_name_alias 'Customer xxx'" do
-        subject
-        expect(json_parse_response_body[:resource][:user_name_alias]).to eq(user_name_alias(@user2.id, @lot.id))
-      end
-    end
+      let(:lot1) { create(:lot_in_process, user_id: @user.id, current_price: 10.0, estimated_price: 20.0) }
+      let(:lot2) { create(:lot_in_process, user_id: customer.id, current_price: 10.0, estimated_price: 20.0) }
 
-    context "create bid 'You'" do
       subject do
-        post :create, params: attributes_for(:bid, user_id: @user.id, lot_id: @lot2.id, proposed_price: @proposed_price)
+        # not win bid
+        post :create, params: attributes_for(:bid, lot_id: lot1.id, proposed_price: lot1.current_price + 1)
       end
-      it "response with :user_name_alias 'You'" do
-        subject
-        expect(json_parse_response_body[:resource][:user_name_alias]).to eq(user_name_alias(@user.id, @lot2.id))
-      end
-    end
 
-    context "create bid valid" do
-      it "response for create should be success and change lot.current_price" do
-        expect { subject }.to change { @lot.reload.current_price }.from(@lot.current_price).to(@proposed_price)
+      context "owner stack" do
+        it "should not create" do
+          subject
+          expect(json_parse_response_body[:errors][:user]).to include("Lot owner can't create bid for his lot")
+        end
       end
-    end
 
-    context "create bid should be errors " do
-      it "proposed_price can't be blank" do
-        post :create, params: attributes_for(:bid, lot_id: @lot.id, proposed_price: "")
-        expect(json_parse_response_body[:errors][:proposed_price].to_s).to match /can't be blank/
+      context "customer stack" do
+        before(:each) do
+          login_by_user(customer)
+        end
+        context "create not bid_win" do
+
+          it "should create bid, end not add lot1.bid_win" do
+            subject
+            expect(response).to be_successful
+            expect(lot1.reload.bid_win).to eq(nil)
+          end
+
+          it "should change lot.current_price" do
+            subject
+            expect(response).to be_successful
+            expect(json_parse_response_body[:resource][:proposed_price]).to eq(lot1.reload.current_price)
+          end
+        end
+
+        context "create bid_win" do
+
+          it "should broadcast bid send to lot chanel" do
+            expect { subject }
+                .to have_broadcasted_to("bids_for_lot_#{lot1.id}")
+                        .with(a_hash_including(user_name_alias: user_name_alias(customer.id, lot1.id)))
+          end
+
+          it "response should be with set lot.bid_win" do
+            post :create, params: attributes_for(:bid, lot_id: lot1.id, proposed_price: lot1.estimated_price + 1)
+            bid = json_parse_response_body[:resource]
+            expect(bid[:id]).to eq(lot1.reload.bid_win)
+          end
+
+          it "response with :user_name_alias 'You'" do
+            subject
+            expect(json_parse_response_body[:resource][:user_name_alias]).to eq("You")
+          end
+        end
+
       end
     end
   end
