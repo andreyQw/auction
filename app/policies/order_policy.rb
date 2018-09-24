@@ -10,7 +10,11 @@ class OrderPolicy < ApplicationPolicy
   end
 
   def update?
-    has_access_to_update_order?
+    customer? && record.pending?
+  end
+
+  def status_update?
+    access_for_seller? || access_for_customer?
   end
 
 
@@ -23,41 +27,12 @@ class OrderPolicy < ApplicationPolicy
       @user.id == record.lot.user_win_id
     end
 
-    def has_access_to_update_order?
-      access_seller? || access_customer?
-    end
-
-    def access_seller?
-      seller_status_change? && !seller_others_params_change?
-    end
-
-    def seller_status_change?
+    def access_for_seller?
       seller? && status_from_pending_to_sent?
     end
 
-    def seller_others_params_change?
-      seller? && (arrival_type_change? || arrival_location_change?)
-    end
-
-
-    def access_customer?
-      customer_status_case? || customer_others_params?
-    end
-
-    def customer_status_case?
+    def access_for_customer?
       customer? && status_from_sent_to_delivered?
-    end
-
-    def customer_others_params?
-      customer? && status_was_pending? && !status_change?
-    end
-
-    def status_change?
-      record.status != record.status_was
-    end
-
-    def status_was_pending?
-      record.status_was == "pending"
     end
 
     def status_from_pending_to_sent?
@@ -65,14 +40,14 @@ class OrderPolicy < ApplicationPolicy
     end
 
     def status_from_sent_to_delivered?
-      record.status_was == "sent" && record.status == "delivered"
+      status_was_sent? && record.delivered?
     end
 
-    def arrival_type_change?
-      record.arrival_type != record.arrival_type_was
+    def status_was_pending?
+      record.status_was == "pending"
     end
 
-    def arrival_location_change?
-      record.arrival_location != record.arrival_location_was
+    def status_was_sent?
+      record.status_was == "sent"
     end
 end

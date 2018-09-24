@@ -39,7 +39,7 @@ RSpec.describe Lot, type: :model do
   let(:customer) { create(:user) }
   let(:lot_pending) { create(:lot, user_id: seller.id) }
 
-  context "validation" do
+  context "Validation" do
     time_more_now = Time.zone.now + 1.hour
     time_less_now = Time.zone.now - 1.hour
 
@@ -71,47 +71,56 @@ RSpec.describe Lot, type: :model do
   end
 
 
-  it "should push_job_id_to_lot" do
-    lot = create(:lot, user_id: seller.id)
+  context "Bid methods" do
 
-    expect(lot.job_id_in_process).to_not be_nil
-    expect(lot.job_id_closed).to_not be_nil
-  end
+    context "push_job_id_to_lot" do
+      it "should push_job_id_to_lot" do
+        lot = create(:lot, user_id: seller.id)
 
-  context "add_lot_jobs" do
-    before(:each) do
-      Sidekiq::ScheduledSet.new.clear
-    end
-    it "should add jobs" do
-      Sidekiq::Testing.disable!
-
-      lot = build(:lot, user_id: seller.id)
-      jobs_id = lot.add_lot_jobs
-      expect(Sidekiq::ScheduledSet.new.size).to eq 2
-      expect(Sidekiq::ScheduledSet.new.find_job(jobs_id[:job_id_in_process])).to be_truthy
-      expect(Sidekiq::ScheduledSet.new.find_job(jobs_id[:job_id_closed])).to be_truthy
-      Sidekiq::ScheduledSet.new.clear
+        expect(lot.job_id_in_process).to_not be_nil
+        expect(lot.job_id_closed).to_not be_nil
+      end
     end
 
-    it "should return jobs hash" do
-      lot = build(:lot, user_id: seller.id)
+    context "add_lot_jobs" do
+      before(:each) do
+        Sidekiq::ScheduledSet.new.clear
+      end
+      it "should add jobs" do
+        Sidekiq::Testing.disable!
 
-      jobs_id = lot.add_lot_jobs
-      expect(jobs_id).to include(:job_id_in_process, :job_id_closed)
-      expect(jobs_id[:job_id_in_process]).to_not be_nil
-      expect(jobs_id[:job_id_closed]).to_not be_nil
+        lot = build(:lot, user_id: seller.id)
+        jobs_id = lot.add_lot_jobs
+        expect(Sidekiq::ScheduledSet.new.size).to eq 2
+        expect(Sidekiq::ScheduledSet.new.find_job(jobs_id[:job_id_in_process])).to be_truthy
+        expect(Sidekiq::ScheduledSet.new.find_job(jobs_id[:job_id_closed])).to be_truthy
+        Sidekiq::ScheduledSet.new.clear
+      end
+
+      it "should return jobs hash" do
+        lot = build(:lot, user_id: seller.id)
+
+        jobs_id = lot.add_lot_jobs
+        expect(jobs_id).to include(:job_id_in_process, :job_id_closed)
+        expect(jobs_id[:job_id_in_process]).to_not be_nil
+        expect(jobs_id[:job_id_closed]).to_not be_nil
+      end
     end
-  end
 
-  it "should delete_jobs" do
-    Sidekiq::Testing.disable!
-    Sidekiq::ScheduledSet.new.clear
-    lot_pending.delete_jobs
-    expect(Sidekiq::ScheduledSet.new.size).to eq 0
-  end
+    context "delete_jobs" do
+      it "should delete_jobs" do
+        Sidekiq::Testing.disable!
+        Sidekiq::ScheduledSet.new.clear
+        lot_pending.delete_jobs
+        expect(Sidekiq::ScheduledSet.new.size).to eq 0
+      end
+    end
 
-  it "should save image" do
-    expect(lot_pending.image.to_s).to eq("/uploads/test/lot/image/#{lot_pending.id}/no_image.gif")
-    expect(File.file?("#{Rails.root}/public" + lot_pending.image.to_s)).to be true
+    context "Save lot.image" do
+      it "should save image" do
+        expect(lot_pending.image.to_s).to eq("/uploads/test/lot/image/#{lot_pending.id}/no_image.gif")
+        expect(File.file?("#{Rails.root}/public" + lot_pending.image.to_s)).to be true
+      end
+    end
   end
 end

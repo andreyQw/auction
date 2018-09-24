@@ -47,7 +47,7 @@ class Lot < ApplicationRecord
 
   validates :image, file_size: { less_than: 1.megabytes }
 
-  validates :title, :current_price, :estimated_price, :lot_start_time, :lot_end_time,  presence: true
+  validates :title, :lot_start_time, :lot_end_time,  presence: true
 
   validates :current_price, :estimated_price, numericality: { greater_than: 0 }
 

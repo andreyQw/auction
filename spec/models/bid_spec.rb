@@ -27,7 +27,6 @@ RSpec.describe Bid, type: :model do
   let(:lot_in_process) { create(:lot_in_process, user_id: seller.id, current_price: 10.0) }
 
   context "Validation" do
-
     context "proposed_price more_than_last_proposed_price" do
       it "should be valid" do
         bid = build(:bid, lot_id: lot_in_process.id, user_id: customer.id, proposed_price: lot_in_process.current_price + 1)
@@ -84,35 +83,60 @@ RSpec.describe Bid, type: :model do
     end
   end
 
-  it "should change_lot_current_price" do
-    proposed_price = lot_in_process.current_price + 1
-    bid = create(:bid, lot_id: lot_in_process.id, user_id: customer.id, proposed_price: proposed_price)
-    expect(bid.lot.reload.current_price).to eq(proposed_price)
-  end
-
-  context "lot_closed" do
-    it "should not close Lot and not set lot.bid_win, lot.user_win" do
-      bid = create(:bid, lot_id: lot_in_process.id, user_id: customer.id, proposed_price: lot_in_process.current_price + 1)
-      expect(bid.lot.reload.status).to eq("in_process")
-      expect(bid.lot.reload.user_win_id).to eq(nil)
-      expect(bid.lot.reload.bid_win).to eq(nil)
+  context "Bid methods" do
+    context "change_lot_current_price" do
+      it "should change_lot_current_price" do
+        proposed_price = lot_in_process.current_price + 1
+        bid = create(:bid, lot_id: lot_in_process.id, user_id: customer.id, proposed_price: proposed_price)
+        expect(bid.lot.reload.current_price).to eq(proposed_price)
+      end
     end
 
-    it "should close Lot and set lot.bid_win, lot.user_win" do
-      bid = create(:bid, lot_id: lot_in_process.id, user_id: customer.id, proposed_price: lot_in_process.estimated_price + 1)
-      expect(bid.lot.reload.status).to eq("closed")
-      expect(bid.lot.reload.user_win_id).to eq(customer.id)
-      expect(bid.lot.reload.bid_win).to eq(bid.id)
+    context "lot_closed" do
+      context "not close Lot" do
+        before do
+          @bid_not_win = create(:bid, lot_id: lot_in_process.id, user_id: customer.id, proposed_price: lot_in_process.current_price + 1)
+        end
+        it "should not close Lot" do
+          expect(@bid_not_win.lot.reload.status).to eq("in_process")
+        end
+        it "should not close Lot and not set lot.bid_win, lot.user_win" do
+          expect(@bid_not_win.lot.reload.user_win_id).to eq(nil)
+        end
+        it "should not close Lot and not set lot.bid_win, lot.user_win" do
+          expect(@bid_not_win.lot.reload.bid_win).to eq(nil)
+        end
+      end
+
+      context "close Lot" do
+        before do
+          @bid_win = create(:bid, lot_id: lot_in_process.id, user_id: customer.id, proposed_price: lot_in_process.estimated_price + 1)
+        end
+
+        it "should close Lot" do
+          expect(@bid_win.lot.reload.status).to eq("closed")
+        end
+
+        it "should set lot.bid_win" do
+          expect(@bid_win.lot.reload.user_win_id).to eq(customer.id)
+        end
+
+        it "should set lot.user_win" do
+          expect(@bid_win.lot.reload.bid_win).to eq(@bid_win.id)
+        end
+      end
     end
-  end
 
-  it "should send bid to broadcast_bid" do
-    bid = create(:bid, lot_id: lot_in_process.id, user_id: customer.id, proposed_price: lot_in_process.current_price + 1)
+    context "broadcast_bid" do
+      it "should send bid to bids_for_lot_* chanel" do
+        bid = create(:bid, lot_id: lot_in_process.id, user_id: customer.id, proposed_price: lot_in_process.current_price + 1)
 
-    expect {
-      ActionCable.server.broadcast(
-        "bids_for_lot_#{lot_in_process.id}", BidSerializer.new(bid)
-      )
-    }.to have_broadcasted_to("bids_for_lot_#{lot_in_process.id}").with(json_parse(obj_serialization(bid, serializer: BidSerializer))[:bid])
+        expect {
+          ActionCable.server.broadcast(
+            "bids_for_lot_#{lot_in_process.id}", BidSerializer.new(bid)
+          )
+        }.to have_broadcasted_to("bids_for_lot_#{lot_in_process.id}").with(json_parse(obj_serialization(bid, serializer: BidSerializer))[:bid])
+      end
+    end
   end
 end

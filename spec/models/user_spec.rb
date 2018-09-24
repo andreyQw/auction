@@ -42,19 +42,19 @@ require "rails_helper"
 
 RSpec.describe User, type: :model do
 
-  it "if User.count changed by 1" do
-    expect { create(:user) }.to change(User, :count).by(1)
-  end
+  context "Validation" do
+    context "age_must_be_more_then_21" do
+      it "if birthday valid" do
+        user = build(:user)
+        expect(user).to be_valid
+      end
 
-  it "if birthday less then 21 year" do
-    user = create(:user)
-    user.birthday = Time.now - 20.years
-    expect(user).to_not be_valid
-    expect(user.errors.messages.to_s).to match /Age can't be less then 21 year/
-  end
-
-  it "if birthday valid" do
-    user = create(:user)
-    expect(user).to be_valid
+      it "if birthday less then 21 year" do
+        user = build(:user)
+        user.birthday = Time.now - 20.years
+        expect(user).to_not be_valid
+        expect(user.errors.messages.to_s).to match /Age can't be less then 21 year/
+      end
+    end
   end
 end

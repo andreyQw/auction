@@ -22,7 +22,7 @@ class Bid < ApplicationRecord
 
   after_create :change_lot_current_price, :lot_closed, :broadcast_bid
 
-  validates :proposed_price, :lot_id,  presence: true
+  validates :lot_id,  presence: true
 
   validates :proposed_price, numericality: { greater_than: 0 }
 

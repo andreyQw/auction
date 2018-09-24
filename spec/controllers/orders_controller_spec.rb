@@ -13,12 +13,15 @@ RSpec.describe OrdersController, type: :controller do
 
     subject { post :create, params: attributes_for(:order, lot_id: lot_closed.id) }
 
-    it "response not authorized" do
-      subject
-      expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
+    context "User not winner" do
+      it "response not authorized" do
+        subject
+        expect(response.status).to eq(401)
+        expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
+      end
     end
 
-    context "when user winner" do
+    context "User winner" do
       before(:each) do
         login_by_user(user_customer)
       end
@@ -36,111 +39,80 @@ RSpec.describe OrdersController, type: :controller do
 
     let(:customer) { create(:user) }
     let(:lot_closed) { create(:lot, user_id: @user.id, status: :closed, user_win_id: customer.id) }
-    let!(:order_pending) { create(:order, lot_id: lot_closed.id, status: :pending) }
 
-    context "seller" do
+    let(:order_pending) { create(:order, lot_id: lot_closed.id, status: :pending) }
+    let(:order_sent) { create(:order, lot_id: lot_closed.id, status: :sent) }
+    let(:order_delivered) { create(:order, lot_id: lot_closed.id, status: :delivered) }
 
-      context "update order status: (:pending -> :sent)" do
-        it "should update" do
-          put :update, params: { id: lot_closed.id, status: :sent }
-          expect(json_parse_response_body[:resource][:status]).to eq("sent")
+    subject { put :update, params: { id: lot_closed.id, arrival_type: "dhl_express", arrival_location: "Kiev" } }
+    context "Seller update order params: (:arrival_type, :arrival_location)" do
+      context "order_pending" do
+        before do
+          order_pending
         end
-      end
-
-      context "update order status (:pending -> :delivered)" do
         it "should not update" do
-          put :update, params: { id: lot_closed.id, status: :delivered }
+          subject
+          expect(response.status).to eq(401)
           expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
         end
       end
 
-      context "update order params: (status -> :sent, :arrival_type, :arrival_location)" do
-        it "should not update: with arrival_type, arrival_location field" do
-          put :update, params: { id: lot_closed.id, status: "sent", arrival_type: "dhl_express", arrival_location: "Kiev" }
-          expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
+      context "order_sent" do
+        before do
+          order_sent
+        end
+        it "should not update" do
+          subject
+          expect(response.status).to eq(401)
         end
       end
 
-      context "update order params: (:arrival_type, :arrival_location)" do
-        it "should not update: with arrival_type, arrival_location field" do
-          put :update, params: { id: lot_closed.id, arrival_type: "dhl_express", arrival_location: "Kiev" }
-          expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
+      context "order_delivered" do
+        before do
+          order_delivered
+        end
+        it "should not update" do
+          subject
+          expect(response.status).to eq(401)
         end
       end
     end
 
 
-    context "Customer stack/" do
+    context "Customer" do
       before(:each) do
         login_by_user(customer)
       end
-
-      context "pending_order" do
-        context "update status in pending_order (:pending -> :sent)" do
-          it "should not update" do
-            put :update, params: { id: order_pending.id, status: "sent" }
-
-            expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
-          end
+      context "order_pending" do
+        before do
+          order_pending
         end
-
-        context "update status in pending_order (:pending -> :delivered)" do
-          it "should not update" do
-            put :update, params: { id: order_pending.id, status: "delivered" }
-
-            expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
-          end
-        end
-
-        context "update pending_order with :arrival_type" do
-          it "should update" do
-            put :update, params: { id: order_pending.id, arrival_type: "dhl_express" }
-
-            expect(response).to be_successful
-            expect(json_parse_response_body[:resource][:arrival_type]).to eq("dhl_express")
-          end
+        it "should update" do
+          subject
+          expect(response).to be_successful
+          expect(json_parse_response_body[:resource][:arrival_type]).to eq("dhl_express")
+          expect(json_parse_response_body[:resource][:arrival_location]).to eq("Kiev")
         end
       end
 
-      context "update order_sent" do
-
-        let!(:order_sent) { create(:order, lot_id: lot_closed.id, status: "sent") }
-
-        context "update order_sent (:sent -> :delivered)" do
-          it "should update" do
-            put :update, params: { id: order_sent.id, status: :delivered }
-            expect(json_parse_response_body[:resource][:status]).to eq("delivered")
-          end
+      context "order_sent" do
+        before do
+          order_sent
         end
-
-        context "update order_sent (:sent -> :pending)" do
-          it "should not update" do
-            put :update, params: { id: order_sent.id, status: :pending }
-            expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
-          end
-        end
-
-        context "update order_sent with :arrival_type" do
-          it "should not update" do
-            put :update, params: { id: order_sent.id, arrival_type: "dhl_express" }
-            expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
-          end
+        it "should not update" do
+          subject
+          expect(response.status).to eq(401)
         end
       end
 
-      context "update order_delivered" do
-        let!(:order_delivered) { create(:order, lot_id: lot_closed.id, status: "delivered") }
-
-        it "should not update arrival_type" do
-          put :update, params: { id: order_delivered.id, arrival_type: "dhl_express" }
-          expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
+      context "order_delivered" do
+        before do
+          order_delivered
         end
-
-        it "should not update status" do
-          put :update, params: { id: order_delivered.id, status: :pending }
-          expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
+        it "should not update" do
+          subject
+          expect(response.status).to eq(401)
         end
-
       end
     end
   end
@@ -149,7 +121,9 @@ RSpec.describe OrdersController, type: :controller do
     let(:seller) { create(:user) }
     let(:customer) { create(:user) }
     let(:user3) { create(:user) }
+
     let(:lot_closed) { create(:lot, user_id: seller.id, status: :closed, user_win_id: customer.id) }
+
     let!(:order_pending) { create(:order, lot_id: lot_closed.id, status: :pending) }
 
     subject { get :show, params: { id: order_pending.id } }

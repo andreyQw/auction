@@ -18,14 +18,12 @@ class OrdersController < ApiController
 
   def update
     order = Order.find(params[:id])
-    order.assign_attributes(order_params)
-
     authorize order
-    order.save
+    order.update(order_params)
     render_resource_or_errors order
   end
 
   def order_params
-    params.permit(:lot_id, :arrival_location, :arrival_type, :status)
+    params.permit(:lot_id, :arrival_location, :arrival_type)
   end
 end
