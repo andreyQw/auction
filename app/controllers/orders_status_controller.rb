@@ -3,14 +3,18 @@
 class OrdersStatusController < ApiController
   def status_update
     order = Order.find(params[:id])
-    order.assign_attributes(order_params)
+    # order.assign_attributes(order_params)
 
-    authorize order
-    order.save
+    authorize order, "update_status_to_" + order_params[:status].to_s + "?"
+    order.update(order_params)
     render_resource_or_errors order
   end
 
   def order_params
-    params.permit(:status)
+    if params[:status] == "sent" || params[:status] == "delivered"
+      params.permit(:status)
+    else
+      {status: "unacceptable"}
+    end
   end
 end
