@@ -1,9 +1,8 @@
 # frozen_string_literal: true
 
 class OrdersStatusController < ApiController
-  def status_update
+  def update
     order = Order.find(params[:id])
-    # order.assign_attributes(order_params)
 
     authorize order, "update_status_to_" + order_params[:status].to_s + "?"
     order.update(order_params)
@@ -11,10 +10,10 @@ class OrdersStatusController < ApiController
   end
 
   def order_params
-    if params[:status] == "sent" || params[:status] == "delivered"
+    if ["sent", "delivered"].include?(params[:status])
       params.permit(:status)
     else
-      {status: "unacceptable"}
+      raise ActionController::BadRequest.new("Bad request, wrong params")
     end
   end
 end

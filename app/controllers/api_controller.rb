@@ -12,4 +12,8 @@ class ApiController < ActionController::API
   rescue_from Pundit::NotAuthorizedError do
     render json: { error: "You are not authorized for this action" }, status: :unauthorized
   end
+
+  rescue_from ActionController::BadRequest do |exception|
+    render json: { error: exception.message }, status: :bad_request
+  end
 end

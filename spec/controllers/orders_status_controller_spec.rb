@@ -23,7 +23,7 @@ RSpec.describe OrdersStatusController, type: :controller do
         end
         context "update status: (:pending -> :sent)" do
           it "should update" do
-            put :status_update, params: { id: order_pending.id, status: :sent }
+            put :update, params: { id: order_pending.id, status: :sent }
             expect(response).to be_successful
             expect(json_parse_response_body[:resource][:status]).to eq("sent")
           end
@@ -31,7 +31,7 @@ RSpec.describe OrdersStatusController, type: :controller do
 
         context "update status: (:pending -> :delivered)" do
           it "should not update" do
-            put :status_update, params: { id: order_pending.id, status: :delivered }
+            put :update, params: { id: order_pending.id, status: :delivered }
             expect(response.status).to eq(401)
             expect(json_parse_response_body[:error]).to eq("You are not authorized for this action")
           end
@@ -44,14 +44,14 @@ RSpec.describe OrdersStatusController, type: :controller do
         end
         context "update status: (:sent -> :pending)" do
           it "should not update" do
-            put :status_update, params: { id: order_sent.id, status: :pending }
-            expect(response.status).to eq(401)
+            put :update, params: { id: order_sent.id, status: :pending }
+            expect(response.status).to eq(400)
           end
         end
 
         context "update status: (:sent -> :delivered)" do
           it "should not update" do
-            put :status_update, params: { id: order_sent.id, status: :delivered }
+            put :update, params: { id: order_sent.id, status: :delivered }
             expect(response.status).to eq(401)
           end
         end
@@ -63,14 +63,14 @@ RSpec.describe OrdersStatusController, type: :controller do
         end
         context "update status: (:delivered -> :pending)" do
           it "should not update" do
-            put :status_update, params: { id: order_delivered.id, status: :pending }
-            expect(response.status).to eq(401)
+            put :update, params: { id: order_delivered.id, status: :pending }
+            expect(response.status).to eq(400)
           end
         end
 
         context "update status: (:delivered -> :sent)" do
           it "should not update" do
-            put :status_update, params: { id: order_delivered.id, status: :sent }
+            put :update, params: { id: order_delivered.id, status: :sent }
             expect(response.status).to eq(401)
           end
         end
@@ -89,14 +89,14 @@ RSpec.describe OrdersStatusController, type: :controller do
 
         context "update status: (:pending -> :delivered)" do
           it "should not update" do
-            put :status_update, params: { id: order_pending.id, status: :delivered }
+            put :update, params: { id: order_pending.id, status: :delivered }
             expect(response.status).to eq(401)
           end
         end
 
         context "update status: (:pending -> :sent)" do
           it "should not update" do
-            put :status_update, params: { id: order_pending.id, status: :sent }
+            put :update, params: { id: order_pending.id, status: :sent }
             expect(response.status).to eq(401)
           end
         end
@@ -109,7 +109,7 @@ RSpec.describe OrdersStatusController, type: :controller do
 
         context "update status: (:sent -> :delivered)" do
           it "should update" do
-            put :status_update, params: { id: order_sent.id, status: :delivered }
+            put :update, params: { id: order_sent.id, status: :delivered }
             expect(response).to be_successful
             expect(json_parse_response_body[:resource][:status]).to eq("delivered")
           end
@@ -117,8 +117,8 @@ RSpec.describe OrdersStatusController, type: :controller do
 
         context "update status: (:sent -> :pending)" do
           it "should not update" do
-            put :status_update, params: { id: order_sent.id, status: :pending }
-            expect(response.status).to eq(401)
+            put :update, params: { id: order_sent.id, status: :pending }
+            expect(response.status).to eq(400)
           end
         end
       end
@@ -130,14 +130,14 @@ RSpec.describe OrdersStatusController, type: :controller do
 
         context "update status: (:delivered -> :pending)" do
           it "should not update" do
-            put :status_update, params: { id: order_delivered.id, status: :pending }
-            expect(response.status).to eq(401)
+            put :update, params: { id: order_delivered.id, status: :pending }
+            expect(response.status).to eq(400)
           end
         end
 
         context "update status: (:delivered -> :sent)" do
           it "should not update" do
-            put :status_update, params: { id: order_delivered.id, status: :sent }
+            put :update, params: { id: order_delivered.id, status: :sent }
             expect(response.status).to eq(401)
           end
         end

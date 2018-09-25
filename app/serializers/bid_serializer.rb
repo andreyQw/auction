@@ -28,6 +28,4 @@ class BidSerializer < ActiveModel::Serializer
     end
   end
 
-  # belongs_to :user
-  # belongs_to :lot
 end

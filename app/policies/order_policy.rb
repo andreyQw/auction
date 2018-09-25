@@ -21,10 +21,6 @@ class OrderPolicy < ApplicationPolicy
     customer? && record.sent?
   end
 
-  def update_status_to_unacceptable?
-    false
-  end
-
   private
 
     def seller?
@@ -34,5 +30,4 @@ class OrderPolicy < ApplicationPolicy
     def customer?
       @user.id == record.lot.user_win_id
     end
-
 end

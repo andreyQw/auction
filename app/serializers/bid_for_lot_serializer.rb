@@ -5,7 +5,6 @@ class BidForLotSerializer < ActiveModel::Serializer
 
   def user_name_alias
     if object.user_id == current_user.id
-      # if object.user_id == current_user.id
       "You"
     else
       crypt = (object.user_id.to_s + object.lot_id.to_s).crypt("qweqwe")

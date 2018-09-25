@@ -40,7 +40,4 @@
 
 class UserSerializer < ActiveModel::Serializer
   attributes :id, :email, :phone, :first_name, :last_name, :birthday
-
-  has_many :lots
-  has_many :bids
 end
