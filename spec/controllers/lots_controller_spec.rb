@@ -4,6 +4,9 @@ require "rails_helper"
 require "sidekiq/testing"
 
 RSpec.describe LotsController, type: :controller do
+  after(:all) do
+    Sidekiq::ScheduledSet.new.clear
+  end
 
   describe "GET /lots" do
 
@@ -39,6 +42,7 @@ RSpec.describe LotsController, type: :controller do
     context "context: path with login" do
       login(:user)
       let(:user2) { create(:user) }
+      let(:user3) { create(:user) }
 
       # lots for @user
       let(:lots_pending) { create_list(:lot, 10, user_id: @user.id) }
@@ -53,7 +57,8 @@ RSpec.describe LotsController, type: :controller do
       let(:user2_lot_closed)    { create(:lot_closed, user_id: user2.id) }
 
       # bis with :lot_for_bid and :user2
-      let(:bid_not_win) { create(:bid, lot_id: lot_for_bid.id, user_id: user2.id, proposed_price: 15) }
+      let(:bid_not_win) { create(:bid, lot_id: lot_for_bid.id, user_id: user2.id, proposed_price: lot_for_bid.reload.current_price + 1) }
+      let(:bid_not_win_user3) { create(:bid, lot_id: lot_for_bid.id, user_id: user3.id, proposed_price: lot_for_bid.reload.current_price + 1) }
       let(:bid_win)     { create(:bid, lot_id: lot_for_bid.id, user_id: user2.id, proposed_price: 25) }
 
 
@@ -80,13 +85,12 @@ RSpec.describe LotsController, type: :controller do
           get :index, params: { page: current_page }
           expect(json_parse_response_body[:resources].count).to eq(1)
           expect(json_parse_response_body[:meta][:current_page]).to eq(current_page)
-          expect(json_parse_response_body[:resources]).to eq([json_parse(obj_serialization(user2_lot_in_process, serializer: LotSerializer))[:lot]])
         end
 
         it "serializer: should return correct fields" do
           get :index
           lot_attributes = [:id, :user_id, :title, :image, :description, :status, :current_price,
-                            :estimated_price, :lot_start_time, :lot_end_time, :bid_win, :user_win_id, :job_id_in_process, :job_id_closed, :bids]
+                            :estimated_price, :lot_start_time, :lot_end_time, :bid_win, :user_win_id, :bids]
           expect(json_parse_response_body[:resources].first.keys).to eq(lot_attributes)
         end
       end
@@ -101,6 +105,7 @@ RSpec.describe LotsController, type: :controller do
 
           lot_for_bid # owner @user - seller
           bid_not_win # user2 - customer
+          bid_not_win_user3 # user3 - customer
         end
 
         it "should return lots with: filter == 'all' (all his lot and lots where he take path)" do
@@ -280,14 +285,6 @@ RSpec.describe LotsController, type: :controller do
 
     context "delete with valid user" do
       login(:user)
-
-      it "should delete lot with :pending status and jobs" do
-        Sidekiq::Testing.disable!
-        delete :destroy, params: { id: lot_pending.id }
-        expect(response.status).to eq 200
-        expect(@user.lots.count).to eq 0
-        expect(Sidekiq::ScheduledSet.new.size).to eq 0
-      end
 
       it "should not delete (status: :in_process)" do
         delete :destroy, params: { id: lot_in_process.id }

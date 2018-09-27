@@ -1,14 +1,19 @@
 # frozen_string_literal: true
 
 class BidsController < ApiController
-  before_action :authenticate_user!
-
   def create
-    bid = Bid.create(bid_params.merge(user: current_user))
-    render_resource_or_errors(bid, serializer: BidSerializer, current_user_id: current_user.id)
+    bid = current_user.bids.build(bid_params)
+    bid.save
+
+    send_on_broadcast bid
+    render_resource_or_errors(bid, serializer: BidSerializer)
   end
 
   def bid_params
     params.permit(:proposed_price, :lot_id)
+  end
+
+  def send_on_broadcast(bid)
+    ActionCable.server.broadcast("bids_for_lot_#{bid.lot.id}", BidSerializer.new(bid, scope: current_user, scope_name: :current_user))
   end
 end

@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class OrdersController < ApiController
-  before_action :authenticate_user!
-
   def create
     order = Order.new(order_params)
     authorize order

@@ -29,7 +29,7 @@
 
 class LotSerializer < ActiveModel::Serializer
   attributes :id, :user_id, :title, :image, :description, :status, :current_price, :estimated_price,
-             :lot_start_time, :lot_end_time, :bid_win, :user_win_id, :job_id_in_process, :job_id_closed
+             :lot_start_time, :lot_end_time, :bid_win, :user_win_id
 
-  has_many :bids, serializer: BidForLotSerializer
+  has_many :bids, serializer: BidSerializer
 end

@@ -58,12 +58,6 @@ RSpec.describe BidsController, type: :controller do
 
         context "create bid_win" do
 
-          it "should broadcast bid send to lot chanel" do
-            expect { subject }
-                .to have_broadcasted_to("bids_for_lot_#{lot1.id}")
-                        .with(a_hash_including(user_name_alias: user_name_alias(customer.id, lot1.id)))
-          end
-
           it "response should be with set lot.bid_win" do
             post :create, params: attributes_for(:bid, lot_id: lot1.id, proposed_price: lot1.estimated_price + 1)
             bid = json_parse_response_body[:resource]

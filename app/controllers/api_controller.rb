@@ -5,6 +5,8 @@ class ApiController < ActionController::API
   include RenderMethods
   include Pundit
 
+  before_action :authenticate_user!
+
   rescue_from ActiveRecord::RecordNotFound do
     render json: { message: "Not found" }, status: :not_found
   end

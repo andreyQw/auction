@@ -71,7 +71,7 @@ RSpec.describe Lot, type: :model do
   end
 
 
-  context "Bid methods" do
+  context "Lot methods" do
 
     context "push_job_id_to_lot" do
       it "should push_job_id_to_lot" do
@@ -104,15 +104,6 @@ RSpec.describe Lot, type: :model do
         expect(jobs_id).to include(:job_id_in_process, :job_id_closed)
         expect(jobs_id[:job_id_in_process]).to_not be_nil
         expect(jobs_id[:job_id_closed]).to_not be_nil
-      end
-    end
-
-    context "delete_jobs" do
-      it "should delete_jobs" do
-        Sidekiq::Testing.disable!
-        Sidekiq::ScheduledSet.new.clear
-        lot_pending.delete_jobs
-        expect(Sidekiq::ScheduledSet.new.size).to eq 0
       end
     end
 

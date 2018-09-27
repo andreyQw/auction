@@ -20,7 +20,7 @@ class Bid < ApplicationRecord
   belongs_to :user
   belongs_to :lot
 
-  after_create :change_lot_current_price, :lot_closed, :broadcast_bid
+  after_create :change_lot_current_price, :lot_closed
 
   validates :lot_id,  presence: true
 
@@ -53,9 +53,5 @@ class Bid < ApplicationRecord
     if proposed_price >= lot.estimated_price
       Lot.update(status: "closed", bid_win: id, user_win_id: user_id)
     end
-  end
-
-  def broadcast_bid
-    ActionCable.server.broadcast("bids_for_lot_#{lot.id}", BidSerializer.new(self))
   end
 end

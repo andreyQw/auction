@@ -133,9 +133,9 @@ RSpec.describe Bid, type: :model do
 
         expect {
           ActionCable.server.broadcast(
-            "bids_for_lot_#{lot_in_process.id}", BidSerializer.new(bid)
+            "bids_for_lot_#{lot_in_process.id}", BidSerializer.new(bid, scope: customer, scope_name: :current_user)
           )
-        }.to have_broadcasted_to("bids_for_lot_#{lot_in_process.id}").with(json_parse(obj_serialization(bid, serializer: BidSerializer))[:bid])
+        }.to have_broadcasted_to("bids_for_lot_#{lot_in_process.id}").with(json_parse(obj_serialization(bid, serializer: BidSerializer, scope: customer, scope_name: :current_user))[:bid])
       end
     end
   end
