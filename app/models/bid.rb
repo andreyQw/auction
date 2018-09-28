@@ -20,10 +20,9 @@ class Bid < ApplicationRecord
   belongs_to :user
   belongs_to :lot
 
-
   after_create :change_lot_current_price, :lot_closed
 
-  validates :proposed_price, :lot_id,  presence: true
+  validates :lot_id,  presence: true
 
   validates :proposed_price, numericality: { greater_than: 0 }
 
@@ -47,12 +46,12 @@ class Bid < ApplicationRecord
 
 
   def change_lot_current_price
-    lot.update(current_price: proposed_price)
+    lot.update_column("current_price", proposed_price)
   end
 
   def lot_closed
     if proposed_price >= lot.estimated_price
-      lot.update(status: "closed", bid_win: id)
+      Lot.update(status: "closed", bid_win: id, user_win_id: user_id)
     end
   end
 end

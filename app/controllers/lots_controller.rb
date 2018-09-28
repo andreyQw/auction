@@ -1,22 +1,23 @@
 # frozen_string_literal: true
 
 class LotsController < ApiController
-  before_action :authenticate_user!
-
   def index
     filter = params[:filter]
     if filter == "all"
-      return render_resources Lot.my_lots_all(current_user.id)
+      lots = Lot.my_lots_all(current_user.id)
+      return render_resources lots
     elsif filter == "created"
       return render_resources Lot.my_lots_created(current_user.id)
     elsif filter == "participation"
       return render_resources Lot.my_lots_participation(current_user.id)
     end
-    render_resources Lot.lots_in_process
+    render_resources Lot.in_process
   end
 
   def create
-    lot = Lot.create(lot_params.merge(user: current_user))
+    lot = current_user.lots.build(lot_params)
+    authorize lot
+    lot.save
     render_resource_or_errors(lot)
   end
 

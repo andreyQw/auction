@@ -38,6 +38,7 @@ group :development, :test do
   gem "factory_bot_rails"
   gem "faker"
   gem "simplecov", require: false
+  gem "action-cable-testing"
 end
 
 group :development do
@@ -57,3 +58,7 @@ gem "kaminari"
 gem "active_model_serializers", "~> 0.10.0"
 gem "pundit"
 gem "sidekiq"
+# upload image
+gem "carrierwave", "~> 1.0"
+gem "mini_magick"
+gem "file_validators"

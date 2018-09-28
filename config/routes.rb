@@ -7,7 +7,11 @@ Rails.application.routes.draw do
 
   resources :lots
   resources :bids, only: [:create]
+  resources :orders, except: [:index, :destroy]
+
+  put "order_status/:id", action: :update, controller: "orders_status"
 
   require "sidekiq/web"
   mount Sidekiq::Web => "/sidekiq"
+  mount ActionCable.server, at: "/cable"
 end

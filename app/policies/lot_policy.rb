@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 class LotPolicy < ApplicationPolicy
+  def create?
+    record.user_id == user.id
+  end
+
   def update?
     user_has_crud_permits?
   end

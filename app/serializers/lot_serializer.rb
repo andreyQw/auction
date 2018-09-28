@@ -19,6 +19,7 @@
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
 #  user_id           :integer
+#  user_win_id       :integer
 #
 # Indexes
 #
@@ -27,8 +28,8 @@
 #
 
 class LotSerializer < ActiveModel::Serializer
-  attributes :id, :user_id, :title, :image, :description, :status, :current_price, :estimated_price, :lot_start_time, :lot_end_time
+  attributes :id, :user_id, :title, :image, :description, :status, :current_price, :estimated_price,
+             :lot_start_time, :lot_end_time, :bid_win, :user_win_id
 
-  # belongs_to :user
-  has_many :bids
+  has_many :bids, serializer: BidSerializer
 end
